@@ -1,0 +1,249 @@
+<section class="module" id="module-5" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">自我进化：越用越强的秘密</h1>
+      <p class="module-subtitle">GA 把每次成功的摸索「结晶」成一个技能存进记忆——下次同类任务，一句话就能复用。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">一个你身体里就有的比喻</h2>
+        <p>第一次学骑自行车，你要盯着每个动作、摔好几跤。学会之后呢？跨上去就走，根本不用想——那叫<strong>肌肉记忆</strong>。</p>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🚲</div>
+          <div class="callout-content">
+            <strong class="callout-title">GA 也有「肌肉记忆」</strong>
+            <p>第一次做一件新事，它要装库、写脚本、调试、踩坑；做成之后，它把这套流程<span class="term" data-definition="结晶（Crystallize）：把一次成功任务里『验证有效的关键步骤』提炼、固化成一份可复用的技能笔记，存进长期记忆。下次直接照做。">结晶</span>成一份技能笔记。下次同类任务，直接照做，不再从零摸索。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">第一次 vs 之后每一次</h2>
+        <p>同一句指令，第一次和往后的成本天差地别——这正是「自我进化」最直观的样子。</p>
+
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🐣</div>
+            <h4 class="pattern-title">「读我的微信消息」· 第一次</h4>
+            <p class="pattern-desc">装依赖 → 逆向数据库 → 写读取脚本 → 反复调试 → 把流程存成技能。慢，但只此一次。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">🚀</div>
+            <h4 class="pattern-title">「读我的微信消息」· 之后</h4>
+            <p class="pattern-desc">直接翻出那份技能，一句话调用。秒级完成。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🐣</div>
+            <h4 class="pattern-title">「盯盘并提醒我」· 第一次</h4>
+            <p class="pattern-desc">装 <code>mootdx</code> → 搭选股流程 → 配置定时任务 → 存成技能。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">🚀</div>
+            <h4 class="pattern-title">「盯盘并提醒我」· 之后</h4>
+            <p class="pattern-desc">一句话启动，整套监控自动跑起来。</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🌳</div>
+          <div class="callout-content">
+            <strong class="callout-title">长出一棵专属技能树</strong>
+            <p>用上几周，你这台 GA 会攒出一套<strong>世界上独一无二</strong>的技能——全是从那 3000 行种子代码、配合你的真实任务长出来的。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">「结晶」是哪件工具干的</h2>
+        <p>还记得第 3 章那件特殊的记忆工具 <code>start_long_term_update</code> 吗？任务做完、有值得记的东西时，它就启动「结晶」流程：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · do_start_long_term_update()</span>
+            <pre><code><span class="code-line">prompt = <span class="code-string">'''### [总结提炼经验] ...请提取最近一次任务中</span></span>
+<span class="code-line"><span class="code-string">【事实验证成功且长期有效】的环境事实、用户偏好、</span></span>
+<span class="code-line"><span class="code-string">重要步骤，更新记忆。</span></span>
+<span class="code-line"><span class="code-string">**如果没有经验证的、未来能用上的信息，忽略本次调用！**</span></span>
+<span class="code-line"><span class="code-string">**只能提取行动验证成功的信息** ...'''</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">它给大脑下一道「结算」指令：回顾刚才的任务，挑出值得长期记住的东西。</p>
+              <p class="tl">只挑三类：验证过的<strong>环境事实</strong>、<strong>用户偏好</strong>、<strong>关键步骤</strong>。</p>
+              <p class="tl">划重点：<strong>没有「验证成功、未来用得上」的信息，就直接跳过</strong>，绝不为记而记。</p>
+              <p class="tl">再划重点：只准记<strong>行动验证成功</strong>的东西——做过但没验证的，不算。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-icon">🚫</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么对「记什么」这么严？</strong>
+            <p>因为记忆会污染未来的判断。如果把没验证的猜测、临时变量、通用常识一股脑塞进去，记忆库会越来越脏，反而拖累它。<strong>只结晶被现实验证过的经验</strong>——这是保持「越用越准」而不是「越用越乱」的关键纪律。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">把整个进化闭环串起来</h2>
+        <p>你这门课学的每一块，其实都是这个闭环上的一环：</p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>新任务来了</strong>
+              <p>循环（第 2 章）启动，大脑开始走一步看一步。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>自主摸索</strong>
+              <p>用 9 件工具（第 3 章）装依赖、写脚本、调试、验证，直到做成。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>结晶成技能</strong>
+              <p>把验证成功的关键步骤，写进 L3 记忆层（第 4 章）。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>下次直接复用</strong>
+              <p>遇到同类任务，顺着 L1 索引翻出技能，一句话搞定。能力，就这样滚雪球。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔁</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是它和别的智能体最本质的区别</strong>
+            <p>大多数智能体每次对话都「失忆重来」。GA 会把经验沉淀下来，<strong>一次比一次强</strong>。少量种子代码 + 这个闭环 = 越用越强大的私人智能体。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">毕业测验：把五章连起来</h2>
+        <p>这几题需要你调用整门课的理解，而不只是某一章。</p>
+
+        <div class="quiz-container" id="quiz-module5">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。do_start_long_term_update 的指令里反复强调：只提取『行动验证成功』的信息，没验证的猜测一律不记。这条纪律保证记忆库越来越准而不是越来越脏——这正是『越用越强』而非『越用越乱』的前提。"
+               data-explanation-wrong="回看那段结晶指令。它最强调的一条是『只记验证成功的信息，未验证的一律跳过』。把没验证的猜测也存进去，恰恰是它明令禁止的——那会污染未来判断。">
+            <h3 class="quiz-question">你希望 GA 的记忆「越用越准」。下面哪条做法最符合它的结晶纪律？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>把每次任务的所有推理过程、临时变量都完整存下来，信息越多越好。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>只把「行动验证成功、未来用得上」的事实和步骤存进去，没验证的一律不记。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>每次任务结束都强制写一条新记忆，哪怕没什么新东西。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。你描述的现象——AI 反复试同一个错、绕不出来——往往是它没有调用相关 SOP，或上下文里缺关键约束。基于第 3、4 章，你可以明确指挥它：『先去 L3 翻 xxx_sop』或『把关键约束写进 working memory』。这种精准干预，正是这门课要给你的能力。"
+               data-explanation-wrong="想想你学到的架构。当 AI 陷在 bug 循环里，最有效的不是反复说『再试一次』，而是利用它的记忆机制——让它去翻相关 SOP、或把关键约束钉进 working memory，给它新的信息和方向。">
+            <h3 class="quiz-question">真实场景：你让 GA 干活，它卡在一个 bug 上反复试同样的错招、绕不出来。基于这门课，你最该怎么干预？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>不停回复「再试一次」，直到它撞对为止。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>立刻关掉重开，反正它会自己失忆。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>给它新信息和方向：让它去翻相关 SOP，或把关键约束写进 working memory。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-a"
+               data-explanation-right="对。这正是全课主线：强大来自『结构』——走一步看一步的循环、折叠压缩的记忆、命名约定的工具分发、验证后才结晶的进化闭环。理解了这些结构，你就能看懂、预判、并指挥这类智能体，而不被『代码很少』迷惑。"
+               data-explanation-wrong="再想想这五章的主线。GA 的强大从来不是靠堆功能或藏一个大系统，而是靠几个精巧结构的配合：循环 + 分层记忆 + 工具组合 + 进化闭环。结构，才是答案。">
+            <h3 class="quiz-question">朋友质疑：「3000 行代码的东西能有多强？」用你学到的，最有力的回应是？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>强大来自「结构」而非「行数」：循环、分层记忆、工具组合、进化闭环的精巧配合。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>其实它背后偷偷连着一个几十万行的大系统，本地只是个壳。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>3000 行已经够多了，足以把所有功能都写死进去。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">再试一次</button>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">🎓 你现在能做什么了</h2>
+        <p>从「一句话变一串动作」一路拆到「自我进化的闭环」，你已经握住了这台智能体的全部骨架。</p>
+        <div class="icon-rows">
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-1)">🧭</div>
+            <div>
+              <strong>看懂它在干嘛</strong>
+              <p>任务卡住、莫名停下、行为反常时，你能定位到是循环、工具还是记忆的问题。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-2)">🎯</div>
+            <div>
+              <strong>更精准地指挥它</strong>
+              <p>你能用对词——「用 file_patch 改这段」「去 L3 翻 SOP」「把这条钉进 working memory」。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-5)">🛠️</div>
+            <div>
+              <strong>判断 AI 对不对</strong>
+              <p>当它声称完成、却没验证，或想把没验证的东西写进记忆时，你知道哪里不对劲。</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🌟</div>
+          <div class="callout-content">
+            <strong class="callout-title">恭喜你读完了</strong>
+            <p>现在打开 <code>agent_loop.py</code> 和 <code>ga.py</code>，你看到的不再是天书，而是一台你理解其每一次心跳的机器。去指挥它吧。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

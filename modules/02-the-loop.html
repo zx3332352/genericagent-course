@@ -1,0 +1,293 @@
+<section class="module" id="module-2" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">100 行的心跳</h1>
+      <p class="module-subtitle">把整个智能体引擎想成一局「回合制游戏」——每一回合，AI 只做一件事。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">一个好用的比喻：回合制游戏</h2>
+        <p>象棋、回合制 RPG，都是「轮到你 → 你走一步 → 看棋盘变化 → 再轮到你」。GenericAgent 的引擎一模一样。</p>
+        <div class="icon-rows">
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-2)">🧠</div>
+            <div>
+              <strong>轮到 AI 行动</strong>
+              <p>把当前对话发给大脑，让它想：「这一步我要调用哪个工具？」</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-1)">🦾</div>
+            <div>
+              <strong>执行这一步</strong>
+              <p>引擎把大脑点名的工具真正跑一遍，拿到结果。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-4)">🔄</div>
+            <div>
+              <strong>把棋盘变化告诉它</strong>
+              <p>结果被打包成下一回合的输入，再丢回大脑。回合数 +1。</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">⏱️</div>
+          <div class="callout-content">
+            <strong class="callout-title">一个「回合」= 一次工具调用</strong>
+            <p>工程师把这一圈叫做一个 <span class="term" data-definition="Turn（回合）指智能体「想一次 + 做一次」的完整一圈。一个复杂任务可能要几十个回合才能完成。">turn（回合）</span>。下面的代码里，<code>turn</code> 这个计数器就是游戏的回合数。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">心跳的第一拍：开口问大脑</h2>
+        <p>每个回合的开头，引擎做的第一件事，是把整份对话发给大脑、等它回话。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-keyword">while</span> turn &lt; handler.max_turns:</span>
+<span class="code-line">    turn += <span class="code-number">1</span></span>
+<span class="code-line">    response_gen = client.chat(messages=messages, tools=tools_schema)</span>
+<span class="code-line">    response = <span class="code-keyword">yield from</span> response_gen</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl"><span class="term" data-definition="while 循环：一段「只要条件成立就一直重复」的代码。这里是「只要回合数没超上限，就一直转」。">只要</span>回合数还没到上限，就继续转这个圈。</p>
+              <p class="tl">回合数加 1——新的一回合开始了。</p>
+              <p class="tl">把整份对话 + 可用工具清单，发给大脑，请它思考并回话。</p>
+              <p class="tl">等大脑把话说完，收下它的完整回复 <code>response</code>。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">📡</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么把工具清单一起发？</strong>
+            <p>大脑不会凭空知道自己有哪些「手」。每回合都把 <code>tools_schema</code>（工具说明书）一起递过去，它才知道这回合能选哪些工具来用。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">第二拍：大脑点名，引擎动手</h2>
+        <p>大脑的回话里，藏着它这一步想调用的工具。引擎要把这些「点名」一个个解析出来，然后真正去执行。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line">tool_calls = [{<span class="code-string">'tool_name'</span>: tc.function.name,</span>
+<span class="code-line">               <span class="code-string">'args'</span>: json.loads(tc.function.arguments),</span>
+<span class="code-line">               <span class="code-string">'id'</span>: tc.id}</span>
+<span class="code-line">              <span class="code-keyword">for</span> tc <span class="code-keyword">in</span> response.tool_calls]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">从大脑的回复里，把每一个「工具调用」拆出来。</p>
+              <p class="tl">记下工具的名字（比如 <code>code_run</code>）。</p>
+              <p class="tl">记下要传给它的参数。<span class="term" data-definition="JSON 是一种「带括号和引号的结构化文本」，是程序之间传数据的通用格式。json.loads 就是把这段文本变回程序能用的数据。">JSON</span> 文本在这里被翻译回程序能用的形式。</p>
+              <p class="tl">还有一个 <code>id</code>，方便稍后把「结果」对回到「是哪次调用」。</p>
+              <p class="tl">大脑这回合可能一次点好几个工具，所以用列表把它们都收齐。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">把一个回合，听成一段对话</h2>
+        <p>如果给引擎、大脑、工具三个角色配上对话框，一个回合大概是这样聊的：</p>
+
+        <div class="chat-window" id="chat-module2">
+          <div class="chat-messages">
+            <div class="chat-message" data-msg="0" data-sender="engine" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">⚙️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">引擎 (Loop)</span>
+                <p>第 7 回合。这是目前的对话和你能用的工具，想想下一步该干嘛？</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="1" data-sender="brain" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-2)">🧠</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-2)">大脑 (LLM)</span>
+                <p>我决定调用 <code>code_run</code>，跑这段 Python 把价格抓下来。</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="2" data-sender="engine" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">⚙️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">引擎 (Loop)</span>
+                <p>收到，我去找名叫 <code>do_code_run</code> 的执行器，把它跑了。</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="3" data-sender="tool" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">🦾</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-1)">工具 (code_run)</span>
+                <p>跑完了，结果：<code>{"price": 18}</code>。给你一个 StepOutcome。</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="4" data-sender="engine" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">⚙️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">引擎 (Loop)</span>
+                <p>它没说「该退出」，那就把结果打包成下一回合的输入。第 8 回合，开始！</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-typing" id="chat-typing" style="display:none">
+            <div class="chat-avatar" id="typing-avatar">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+          <div class="chat-controls">
+            <button class="btn chat-next-btn">下一条</button>
+            <button class="btn chat-all-btn">全部播放</button>
+            <button class="btn chat-reset-btn">重播</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">第三拍：这回合的「裁决」</h2>
+        <p>每个工具跑完，都会交回一张小纸条，叫 <code>StepOutcome</code>。引擎只看上面三栏，就知道这局怎么继续。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-decorator">@dataclass</span></span>
+<span class="code-line"><span class="code-keyword">class</span> <span class="code-function">StepOutcome</span>:</span>
+<span class="code-line">    data: Any</span>
+<span class="code-line">    next_prompt: Optional[str] = <span class="code-keyword">None</span></span>
+<span class="code-line">    should_exit: bool = <span class="code-keyword">False</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">定义一张标准化的「结果纸条」。每个工具跑完都填一张。</p>
+              <p class="tl"><code>data</code>：这一步实际拿到的东西（比如抓到的价格）。</p>
+              <p class="tl"><code>next_prompt</code>：下一回合要对大脑说的话。<strong>如果留空，引擎就认为「任务做完了」，停。</strong></p>
+              <p class="tl"><code>should_exit</code>：一个 <span class="term" data-definition="布尔值（bool）是只有「真 / 假」两种取值的开关。这里 True 就代表「该退出了」。">真假开关</span>。比如工具要找用户确认，就把它设成「真」，主动跳出循环等人。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧭</div>
+          <div class="callout-content">
+            <strong class="callout-title">三栏纸条，就是整局游戏的方向盘</strong>
+            <p>「有没有下一句话」决定继续还是收工；「要不要退出」决定是否暂停等人。一个极简的约定，控制了整个循环的走向——这就是少代码却不乱的诀窍。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">心跳的最后一拍：只带「新消息」进下一回合</h2>
+        <p>每回合结束，引擎都会做一件乍看很怪的事——把对话列表清空，只留下这一条新消息。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-comment"># just new message, history is kept in *Session</span></span>
+<span class="code-line">messages = [{<span class="code-string">"role"</span>: <span class="code-string">"user"</span>,</span>
+<span class="code-line">             <span class="code-string">"content"</span>: next_prompt,</span>
+<span class="code-line">             <span class="code-string">"tool_results"</span>: tool_results}]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">代码作者亲手写的注释：「只放新消息，历史另外存着」。</p>
+              <p class="tl">把 <code>messages</code> 整个重置，里头只剩一条新的「用户消息」。</p>
+              <p class="tl">内容是上一步的裁决（<code>next_prompt</code>）……</p>
+              <p class="tl">外加这回合工具跑出来的结果。然后下一回合就从这里继续。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🤔</div>
+          <div class="callout-content">
+            <strong class="callout-title">等等——那之前的对话不就丢了吗？</strong>
+            <p>这正是 GenericAgent 最聪明、也最反直觉的设计，直接关系到它「省 token、少出错」的核心优势。我们专门留到 <strong>第 4 章</strong> 拆它。先记住这个疑问。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：你能指挥这台引擎吗</h2>
+        <p>下面的问题，都是你以后真用 AI 调试时会遇到的判断。</p>
+
+        <div class="quiz-container" id="quiz-module2">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。把 next_prompt 留空（None），引擎就判定「没有下一步要说的了 = 任务完成」，于是跳出循环。这是整个循环最关键的退出信号之一。"
+               data-explanation-wrong="再看一眼那张 StepOutcome 纸条。引擎判断「该停了」靠的不是回合数用完，而是工具明确表示「没有下一句话要说了」（next_prompt 为空）或「要退出」。">
+            <h3 class="quiz-question">一个工具执行完，希望告诉引擎「任务已经彻底完成，可以收工了」。它该怎么填那张 StepOutcome 纸条？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>把回合数 turn 直接改成 40，让循环自然到顶。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>把 next_prompt 留空（None）——「没有下一句要说的」就被引擎读作「任务完成」。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>在 data 里写一句「我完成了」，引擎会读懂这句中文。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。max_turns=40 是「防失控」的保险丝：万一 AI 陷入死循环、反复试错，最多转 40 圈就被强制叫停，避免它无限烧钱、无限折腾。理解这点，你以后就知道任务「莫名其妙停了」可能是撞了回合上限。"
+               data-explanation-wrong="不太对。max_turns 不是为了让任务更快，也不是模型能力上限——它是一道安全保险：防止智能体陷入无限循环时一直空转下去。">
+            <h3 class="quiz-question">循环条件里那句 <code>while turn &lt; max_turns</code>（默认 40），最主要是为了解决什么问题？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>让任务跑得更快——回合越少越快。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>这是模型一次能力的硬上限，超过 40 步它就「想不动」了。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>一道安全保险：万一 AI 陷入死循环，最多空转 40 圈就被强制叫停。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module2')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module2')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">下一章</strong>
+            <p>循环里那只「真正动手」的执行器，到底有哪几只手？我们去认识那 <strong>9 件原子工具</strong>。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

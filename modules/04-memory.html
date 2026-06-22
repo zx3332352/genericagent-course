@@ -1,0 +1,535 @@
+<section class="module" id="module-4" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">分层记忆：每回合擦掉白板，却从不失忆</h1>
+      <p class="module-subtitle">解开第 2 章的悬念，看懂 GA「省 token、少幻觉」最核心的设计。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">先回到那个悬念</h2>
+        <p>第 2 章结尾我们看到这句反直觉的代码——每回合，对话被整个清空，只留一条新消息：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-comment"># just new message, history is kept in *Session</span></span>
+<span class="code-line">messages = [{<span class="code-string">"role"</span>: <span class="code-string">"user"</span>,</span>
+<span class="code-line">             <span class="code-string">"content"</span>: next_prompt, ...}]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">作者的注释已经剧透了答案：「历史另外存着」。</p>
+              <p class="tl">发给大脑的对话每回合都重置——<strong>不是把几十回合的聊天记录越堆越长</strong>。</p>
+              <p class="tl">那历史去哪了？它被压缩成一段精简摘要，重新贴进 <code>next_prompt</code> 里。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧽</div>
+          <div class="callout-content">
+            <strong class="callout-title">好比一块侦探白板</strong>
+            <p>侦探破案不会把每天说过的每句话都钉在墙上——他擦掉白板，只留下当前最关键的线索摘要。GA 对大脑的「工作记忆」就是这么管的：<span class="term" data-definition="工作记忆（Working Memory）：智能体每回合实际带给大脑的那段精简上下文。不是完整聊天记录，而是被折叠压缩过的摘要。">每回合重写白板</span>，而不是无限堆叠。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">白板是怎么「重写」的</h2>
+        <p>每回合结束，引擎会把这一步发生了什么，压成一句话摘要，追加进一条历史清单：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · turn_end_callback()</span>
+            <pre><code><span class="code-line">rsumm = re.search(<span class="code-string">r"&lt;summary&gt;(.*?)&lt;/summary&gt;"</span>, _c, re.DOTALL)</span>
+<span class="code-line"><span class="code-keyword">if</span> rsumm: summary = rsumm.group(<span class="code-number">1</span>).strip()</span>
+<span class="code-line">...</span>
+<span class="code-line">self.history_info.append(<span class="code-string">f'[Agent] {summary}'</span>)</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">在大脑的回复里，找它自己写的一段 <code>&lt;summary&gt;</code>（这一步我干了啥）。</p>
+              <p class="tl">找到了，就把这句摘要提取出来。</p>
+              <p class="tl">（找不到就用工具名兜底，并提醒大脑下次记得写摘要。）</p>
+              <p class="tl">把这句简短摘要追加到历史清单里。<strong>存的是「摘要」，不是整段原文。</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <p>下一回合开头，这份历史清单又会被「折叠」一次——太久远的部分压得更狠，只留最近 30 条原样：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · _get_anchor_prompt()</span>
+            <pre><code><span class="code-line">h = self.history_info; W = <span class="code-number">30</span></span>
+<span class="code-line">earlier = ... self._fold_earlier(h[:-W]) ...  <span class="code-comment"># 远的折叠</span></span>
+<span class="code-line">h_str = <span class="code-string">"\n"</span>.join(h[-W:])         <span class="code-comment"># 近 30 条原样</span></span>
+<span class="code-line">prompt = <span class="code-string">f"### [WORKING MEMORY]\n...&lt;history&gt;\n{h_str}\n&lt;/history&gt;"</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">取出全部历史，定一个窗口大小 <code>W = 30</code>。</p>
+              <p class="tl">把 30 条以外的「远古历史」进一步折叠成更短的概要。</p>
+              <p class="tl">最近 30 条保持原样——近的清楚，远的模糊，正合人脑直觉。</p>
+              <p class="tl">拼成一段 <code>[WORKING MEMORY]</code>，这才是真正贴上白板、交给大脑的内容。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">深入：这份「简化」，是又调了一次 LLM 吗？</h2>
+        <p>很自然会以为：把长历史压成短摘要，肯定要再喊一次大脑去「总结」。<strong>其实不是。</strong>GA 刻意避开了这条路。</p>
+
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-error)">
+            <div class="pattern-icon" style="background: var(--color-error)">🗣️</div>
+            <h4 class="pattern-title">常见误解</h4>
+            <p class="pattern-desc">每次压缩历史，都再花一次 API 调用，让模型「读一遍旧记录、写个总结」。又慢又贵，还可能在总结时把信息搞丢、搞错。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-success)">
+            <div class="pattern-icon" style="background: var(--color-success)">✅</div>
+            <h4 class="pattern-title">GA 的真相</h4>
+            <p class="pattern-desc">那句摘要是模型在「本来就要回复的那一轮」里<strong>顺手写</strong>的；引擎只用一行正则把它抠出来。零额外调用。</p>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · turn_end_callback()</span>
+            <pre><code><span class="code-line">rsumm = re.search(<span class="code-string">r"&lt;summary&gt;(.*?)&lt;/summary&gt;"</span>, _c, re.DOTALL)</span>
+<span class="code-line"><span class="code-keyword">if</span> rsumm: summary = rsumm.group(<span class="code-number">1</span>).strip()</span>
+<span class="code-line"><span class="code-keyword">else</span>:</span>
+<span class="code-line">    ... summary = <span class="code-string">f"{tool_name}, args: {clean_args}"</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">在模型这一轮的回复里，用<span class="term" data-definition="正则表达式（Regex）：一种「按模式在文本里查找/匹配」的规则。这里就是『把 <summary> 和 </summary> 之间的内容捞出来』，纯靠程序，不需要 AI。">正则</span>找它自己写的 <code>&lt;summary&gt;</code> 标签。</p>
+              <p class="tl">找到了，就把这段摘要抠出来——<strong>这就完事了，没有第二次 API 调用。</strong></p>
+              <p class="tl">万一模型偷懒没写……</p>
+              <p class="tl">就直接拿「工具名 + 参数」当摘要兜底，连模型都不麻烦。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧮</div>
+          <div class="callout-content">
+            <strong class="callout-title">那「更狠的折叠」呢？也是纯代码</strong>
+            <p>把更早的历史压成 <code>xxx（10 turns）</code> 这种一行概要，靠的是<strong>数数 + 字符串切片</strong>（<code>_fold_earlier</code>），同样不碰 LLM。<span class="term" data-definition="确定性（Deterministic）：同样的输入，永远得到同样的输出。纯代码操作就是确定性的，不会像 AI 那样每次结果略有不同、偶尔编造。">确定性</span>操作，又快又免费，还不会像 AI 总结那样偶尔「编出」原本没有的东西。</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🎯</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么这个选择很关键</strong>
+            <p>如果「简化记忆」本身还要调 LLM，就和第 4 章的目标（省钱、少幻觉）<strong>自相矛盾</strong>了。GA 用「让模型搭便车自报 + 代码折叠」替代「额外 LLM 总结」，是把省钱和防幻觉贯彻到底的一步。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">看一眼这块白板的「重写循环」</h2>
+        <p>每一回合，历史都被重新折叠一次，再贴回给大脑。点下去看它转一圈：</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"这一回合干完了，引擎拿到完整的历史清单（越攒越多）。"},
+          {"highlight":"flow-actor-2","label":"折叠：30 条以外的远古历史被压成短概要，最近 30 条留原样。","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-3","label":"拼成一小段 [WORKING MEMORY]，这就是要贴上白板的精简摘要。","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"上下文始终保持很小（GA 全程 < 30K），大脑读起来又快又准。"},
+          {"highlight":"flow-actor-1","label":"下一回合再来一遍——白板永远精简，记忆却从不丢失。","packet":true,"from":"actor-3","to":"actor-1"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">📜</div>
+              <span>完整历史</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🗜️</div>
+              <span>折叠压缩</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">🧠</div>
+              <span>精简白板 → 大脑</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">点「下一步」，看记忆如何被一次次折叠 →</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">下一步</button>
+            <button class="btn flow-reset-btn">重来</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">💰</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是「省 token、少幻觉」的来源</strong>
+            <p>别的智能体常把几十万字的聊天记录整团塞给大脑（<span class="term" data-definition="上下文窗口（Context Window）：大模型一次能读进去的文字量上限。塞得越满越贵，而且噪声越多，模型越容易看花眼、答错。">上下文窗口</span> 200K–1M）。GA 全程压在 30K 以内：<strong>更便宜、噪声更少、模型更不容易被带偏。</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">再省一刀：读过的内容，别重复收费</h2>
+        <p>还有个容易被忽略的省钱细节。每回合发给大脑的开头那一大段（系统说明书 + 记忆）几乎不变——如果每次都按全价算钱，太亏了。</p>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🏷️</div>
+          <div class="callout-content">
+            <strong class="callout-title">像复印店的「常用模板」</strong>
+            <p>复印店会把你常印的模板存着，下次只收新增页的钱。大模型也有这功能,叫 <span class="term" data-definition="Prompt 缓存（Prompt Caching）：让模型把『不变的开头部分』存起来，下次同样的开头直接命中缓存，只按很低的价格计费。是省钱的关键手段之一。">Prompt 缓存</span>——但你得主动给「不变的部分」贴个标记，它才会缓存。</p>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · llmcore.py · _stamp_oai_cache_markers()</span>
+            <pre><code><span class="code-line">user_idxs = [i <span class="code-keyword">for</span> i, m <span class="code-keyword">in</span> enumerate(messages)</span>
+<span class="code-line">             <span class="code-keyword">if</span> m.get(<span class="code-string">'role'</span>) == <span class="code-string">'user'</span>]</span>
+<span class="code-line"><span class="code-keyword">for</span> idx <span class="code-keyword">in</span> user_idxs[-<span class="code-number">2</span>:]:</span>
+<span class="code-line">    ... <span class="code-property">'cache_control'</span>: {<span class="code-string">'type'</span>: <span class="code-string">'ephemeral'</span>}</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">找出对话里所有「用户消息」的位置。</p>
+              <p class="tl">（一句紧凑的<span class="term" data-definition="列表推导式（List Comprehension）：Python 里一种『一行写完一个筛选/变换循环』的简洁写法。这里就是『挑出所有 role 是 user 的消息下标』。">列表推导式</span>，把它们的下标都收齐。）</p>
+              <p class="tl">只给<strong>最后两条</strong>打标记——前面不变的开头就能被整段缓存命中。</p>
+              <p class="tl">贴上 <code>cache_control: ephemeral</code> 这个标签，告诉模型：「这段可以缓存，下次别重新收费」。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">💸</div>
+          <div class="callout-content">
+            <strong class="callout-title">小标记，大节省</strong>
+            <p>命中缓存的部分,价格可能只有原价的<strong>十分之一</strong>。配合前面「上下文本就压在 30K 以内」，GA 的每一轮都既短、又大量复用缓存——省钱省到了骨子里。（仅对 Claude / Anthropic 这类支持缓存的模型生效。）</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">白板之外：磁盘上的「档案柜」</h2>
+        <p>白板是<strong>短期</strong>记忆，任务结束就没了。真正长期沉淀的知识，存在磁盘上、分成 5 层。点标签切换看每一层：</p>
+
+        <div class="layer-demo">
+          <div class="layer-tabs">
+            <button class="layer-tab active" onclick="showLayer('layer-l0', this)">L0 元规则</button>
+            <button class="layer-tab" onclick="showLayer('layer-l1', this)">L1 索引</button>
+            <button class="layer-tab" onclick="showLayer('layer-l2', this)">L2 事实</button>
+            <button class="layer-tab" onclick="showLayer('layer-l3', this)">L3 技能</button>
+            <button class="layer-tab" onclick="showLayer('layer-l4', this)">L4 归档</button>
+          </div>
+          <div class="layer-viewport">
+            <div class="layer" id="layer-l0" style="display:block">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-1)">📜</div>
+                <div>
+                  <strong>L0 · 元规则（Meta Rules）</strong>
+                  <p>最高宪法：核心行为准则、系统红线。比如「改自身源码先请示」「写记忆前先读 L0 核验」。永远不变。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l1" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-2)">🗂️</div>
+                <div>
+                  <strong>L1 · 洞察索引（Insight Index）</strong>
+                  <p>一份极简「目录」，用来快速路由：哪类任务该去翻哪份 SOP。每回合都带在身边，所以必须极小。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l2" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-3)">🗃️</div>
+                <div>
+                  <strong>L2 · 全局事实（Global Facts）</strong>
+                  <p>长期稳定的事实档案：常用路径、配置、凭证位置。验证过、长期有效的才进来。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l3" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-4)">📘</div>
+                <div>
+                  <strong>L3 · 任务技能 / SOP</strong>
+                  <p>可复用的「操作手册」：某类任务怎么一步步做、有哪些坑。比如读微信记录、抓股票的完整流程。第 5 章的产物就落在这里。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l4" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-5)">📦</div>
+                <div>
+                  <strong>L4 · 会话归档（Session Archive）</strong>
+                  <p>已完成任务的历史记录归档，供超长周期回忆——「上个月那次我是怎么搞定的？」</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="layer-description">越往上越「死」（很少改动、人人遵守），越往下越「活」（不断新增、随用随长）。</p>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔗</div>
+          <div class="callout-content">
+            <strong class="callout-title">短期白板 × 长期档案，两套记忆配合</strong>
+            <p>干活时大脑看的是精简白板；遇到没把握的，就顺着 L1 索引去翻 L2 / L3 的档案。这套分工，让一个小上下文也能调动海量沉淀知识。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">记忆什么时候被「写」进去？</h2>
+        <p>关键点：GA <strong>不是想起来才记</strong>。记忆的写入有固定时机，分两种来源——大脑主动写，和引擎按回合节奏「敲桌子」催它写。</p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-num">①</div>
+            <div class="step-body">
+              <strong>任务开始 / 中途 —— 大脑主动写白板</strong>
+              <p>大脑判断「这个重点后面要一直记着」，就调 <code>update_working_checkpoint</code>，把它钉进短期 <span class="term" data-definition="Working Memory（工作记忆）：每回合带给大脑的那段精简上下文。钉进去的 key_info 会一直跟着，直到任务结束。">工作记忆</span> 的 <code>key_info</code>。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">⑦</div>
+            <div class="step-body">
+              <strong>每满 7 回合 —— 引擎催「保存关键上下文」</strong>
+              <p>怕长任务里关键信息被折叠丢掉，引擎主动提醒大脑调 <code>update_working_checkpoint</code>，并建议「别再无效重试，换策略 / 回看 SOP」。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">㉕</div>
+            <div class="step-body">
+              <strong>每满 25 回合 —— 引擎催「写进文件」</strong>
+              <p>提醒大脑把检查点、关键发现、试过的方法<strong>落到磁盘文件</strong>，避免任务太长时白板折叠把它冲掉。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">💎</div>
+            <div class="step-body">
+              <strong>任务完成且有验证经验 —— 结晶进长期记忆</strong>
+              <p>调 <code>start_long_term_update</code>，把验证成功的事实写进 L2、把流程写进 L3。这一步是第 5 章的主角。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">⏰</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么按「回合数」催，而不是凭感觉？</strong>
+            <p>因为大脑干得起劲时容易「只顾往前冲、忘了存档」。引擎用 7、25 这样的固定节拍当闹钟，强制它定期把关键信息落袋——这是长任务不「半路失忆」的保险。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">记忆在哪里被「读」出来用？</h2>
+        <p>写只是一半。记忆真正发挥作用，是在这 4 个被读取的时机——它们决定了大脑每一步「带着多少记忆上场」。</p>
+
+        <div class="icon-rows">
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-1)">🚀</div>
+            <div>
+              <strong>启动时 —— 记忆被拼进「系统说明书」</strong>
+              <p>程序一开机，就把 L0 行为准则 + L1 全局索引塞进系统提示词。大脑第一句话还没说，已经知道「我有哪些记忆可查」。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-4)">🦾</div>
+            <div>
+              <strong>每个工具执行后 —— 重建白板</strong>
+              <p>每跑完一件工具，<code>_get_anchor_prompt</code> 就把折叠后的历史 + <code>key_info</code> + 相关 SOP 重新拼成 <code>[WORKING MEMORY]</code> 贴回去。这是最高频的一次读取。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-2)">🔄</div>
+            <div>
+              <strong>每满 10 回合 —— 重新注入 L1 索引</strong>
+              <p>怕大脑聊久了「忘了自己有哪些记忆」，引擎每 10 轮把全局记忆（L1 索引 + 当前目录）整段重贴一次。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-3)">📖</div>
+            <div>
+              <strong>卡壳 / 拿不准时 —— 主动翻档案</strong>
+              <p>大脑顺着 L1 索引，用 <code>file_read</code> 去翻 L2 的事实、L3 的 SOP。属于「按需查阅」，不是每回合都读。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agentmain.py · get_system_prompt()</span>
+            <pre><code><span class="code-line">prompt += <span class="code-string">f"\nToday: {time.strftime('%Y-%m-%d %a')}\n"</span></span>
+<span class="code-line">prompt += get_global_memory()</span>
+<span class="code-line"><span class="code-keyword">return</span> prompt</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">系统说明书拼好后，先加上今天的日期（让它知道「现在是哪天」）。</p>
+              <p class="tl">再把 <code>get_global_memory()</code>——也就是 L1 全局索引 + 当前目录——整段拼进去。</p>
+              <p class="tl">交回这份「说明书 + 记忆」。<strong>这就是启动时记忆被读取、注入的那一下。</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔗</div>
+          <div class="callout-content">
+            <strong class="callout-title">读和写常常接力发生</strong>
+            <p>注意一个细节：当大脑用 <code>file_read</code> <strong>读</strong>了一份 SOP，引擎会立刻提示它「把这份 SOP 里的关键点提取出来，<strong>写</strong>进 working memory」。一次读取，往往紧跟一次写入——记忆就这样在任务里不断流动。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">把读和写，串成一条任务时间线</h2>
+        <p>假设 GA 在做「盯盘选股」，整个任务 30 个回合。把记忆的读 / 写标在时间轴上，长这样：</p>
+
+        <div class="step-cards">
+          <div class="step-card" style="border-left-color: var(--color-actor-1)">
+            <div class="step-num" style="background: var(--color-actor-1)">T0</div>
+            <div class="step-body">
+              <strong>【读】启动注入</strong>
+              <p>系统提示词带上 L0 + L1。大脑一上来就知道有 <code>scheduled_task_sop</code> 这类技能可查。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-actor-3)">
+            <div class="step-num" style="background: var(--color-actor-3)">T2</div>
+            <div class="step-body">
+              <strong>【读】翻 L3 SOP</strong>
+              <p>大脑 <code>file_read</code> 读选股 SOP → 引擎提示「提取要点」→【写】把关键步骤钉进 working memory。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-actor-5)">
+            <div class="step-num" style="background: var(--color-actor-5)">T7</div>
+            <div class="step-body">
+              <strong>【写】引擎催存档</strong>
+              <p>满 7 回合，引擎提醒 → 大脑调 <code>update_working_checkpoint</code> 保存「已装好 mootdx、筛选条件是 EXPMA 金叉」。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-actor-2)">
+            <div class="step-num" style="background: var(--color-actor-2)">T10</div>
+            <div class="step-body">
+              <strong>【读】重注入 L1</strong>
+              <p>满 10 回合，全局索引整段重贴一次，防止聊久了「忘了记忆库长啥样」。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-accent)">
+            <div class="step-num">T30</div>
+            <div class="step-body">
+              <strong>【写】结晶进长期记忆</strong>
+              <p>任务成功，调 <code>start_long_term_update</code>：把「选股完整流程」写进 L3，下次一句话复用。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🫀</div>
+          <div class="callout-content">
+            <strong class="callout-title">记忆不是「存了就放着」，而是全程在跳动</strong>
+            <p>启动读一次、每步重建白板、每 10 轮重注入、按需翻档案、关键节点强制存档、完工结晶——读与写交替贯穿整个任务。这套节奏，才是「小上下文也不丢线索」的真正保障。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：拿它来排查问题</h2>
+        <p>理解了记忆设计，你就能解释很多「为什么 AGI 智能体会这样」的现象。</p>
+
+        <div class="quiz-container" id="quiz-module4">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。GA 不把完整聊天记录无限堆给模型，而是每回合把历史折叠成一小段 working memory。上下文始终很小（< 30K），所以更省钱、噪声更少、模型更不容易被一大堆无关历史带偏而产生幻觉。"
+               data-explanation-wrong="再想想第 4 章的核心。GA 省 token 的关键，恰恰是『不把全部历史塞给模型』，而是每回合折叠成精简摘要。把全部历史塞进去是它要避免的事。">
+            <h3 class="quiz-question">有人问你：「为什么 GenericAgent 比别的智能体更省钱、更少胡说八道？」最准确的回答是？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它每回合都把全部聊天历史一字不漏地塞给模型，信息最全。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它每回合把历史折叠成精简摘要，上下文始终很小，噪声少、更便宜。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它用了一个更便宜的小模型，所以又省钱又稳定。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。『某类任务怎么一步步做、有哪些坑』属于可复用的操作手册，正是 L3（任务技能 / SOP）。把它写进 L3，下次遇到同类任务就能直接翻出来照做，不必从零摸索。"
+               data-explanation-wrong="对照一下五层的分工。一份『某类任务的完整操作步骤和坑点』不是临时事实(L2)、也不是最高准则(L0)，而是可复用的操作手册——那是 L3 技能/SOP 的地盘。">
+            <h3 class="quiz-question">GA 第一次成功读取了微信聊天记录，过程中踩了好几个坑。它想把「这类任务该怎么做」永久存下来，应该写进哪一层？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>L0 元规则 —— 因为这很重要。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>白板（working memory）—— 这样下次一定还在。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>L3 任务技能 / SOP —— 可复用的操作手册就该放这里。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。working memory 每回合都会折叠压缩，越早的细节被压得越狠。如果关键约束没被 update_working_checkpoint 钉进 key_info（它会一直跟着、不被折叠冲淡），长任务后期就容易『记不清当初的条件』。应对就是让它把硬约束钉进 working memory，而不是寄望它从一大堆折叠历史里翻出来。"
+               data-explanation-wrong="回看『写入时机』那屏。working memory 是每回合折叠重写的，早期细节会被逐渐压淡。让它『记牢一个长期约束』的正确做法，是用 update_working_checkpoint 钉进 key_info——而不是重启，也不是把全部历史塞回去（那正是 GA 要避免的）。">
+            <h3 class="quiz-question">一个几十回合的长任务，你发现 GA 到后期好像「忘了」最初设定的筛选条件。基于记忆机制，最可能的原因 + 最该让它做什么？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>模型出故障了，关掉任务重启一遍。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>条件没钉进 working memory，被折叠冲淡了——让它用 <code>update_working_checkpoint</code> 把约束钉进 key_info。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>上下文太小了，应该把全部历史原文重新塞回去给它。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">最后一章</strong>
+            <p>L3 那本「操作手册」是从哪来的？没人手写——是 GA 自己把成功经验<strong>结晶</strong>出来的。这就是它最大的魔法：自我进化。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

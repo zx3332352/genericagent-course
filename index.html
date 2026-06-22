@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GenericAgent 拆解课：3000 行代码如何接管一台电脑</title>
+
+  <!-- Google Fonts: Bricolage Grotesque · DM Sans · JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    :root {
+      --color-accent:       #D94F30;
+      --color-accent-hover: #C4432A;
+      --color-accent-light: #FDEEE9;
+      --color-accent-muted: #E8836C;
+    }
+  </style>
+
+  <script src="main.js" defer></script>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="nav-inner">
+      <span class="nav-title">GenericAgent 拆解课</span>
+      <div class="nav-dots" id="nav-dots" role="tablist">
+        <button class="nav-dot" data-target="module-1" data-tooltip="它到底是什么" role="tab" aria-label="第 1 章：它到底是什么"></button>
+        <button class="nav-dot" data-target="module-2" data-tooltip="100 行的心跳" role="tab" aria-label="第 2 章：100 行的心跳"></button>
+        <button class="nav-dot" data-target="module-3" data-tooltip="9 件原子工具" role="tab" aria-label="第 3 章：9 件原子工具"></button>
+        <button class="nav-dot" data-target="module-4" data-tooltip="分层记忆" role="tab" aria-label="第 4 章：分层记忆"></button>
+        <button class="nav-dot" data-target="module-5" data-tooltip="自我进化" role="tab" aria-label="第 5 章：自我进化"></button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- modules/*.html content is assembled here by build.sh -->
+<section class="module" id="module-1" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">你扔一句话，它接管整台电脑</h1>
+      <p class="module-subtitle">认识 GenericAgent：一个只有约 3000 行代码，却能自己开浏览器、敲命令、点手机的智能体。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">先看一个真实场景</h2>
+        <p>你打开一个聊天框，敲下一句话：<strong>「帮我点一杯奶茶」</strong>，回车。</p>
+        <p>几十秒后，外卖软件被自己操作着选好了门店、加好了购物车、走到了结算页。你全程没碰鼠标。</p>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🤖</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是「智能体」（Agent）</strong>
+            <p>一个 <span class="term" data-definition="大语言模型，就是 ChatGPT、Claude 这类会「读懂人话、生成文字」的 AI 大脑。它本身只会输出文字，不会动手做事。">LLM 大模型</span> 负责「思考」，外面包一层程序负责「动手」——读屏幕、敲键盘、点网页。两者合起来，就能把一句人话变成一连串真实操作。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">为什么它值得拆开看？</h2>
+        <p>市面上的智能体框架动辄几十万行代码。GenericAgent 反着来：用极少的「种子代码」，让能力自己长出来。</p>
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🪶</div>
+            <h4 class="pattern-title">约 3000 行</h4>
+            <p class="pattern-desc">核心代码极小。对比 OpenClaw 的 ~53 万行，它几乎是一张草稿纸的体量。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🧰</div>
+            <h4 class="pattern-title">9 件原子工具</h4>
+            <p class="pattern-desc">跑代码、读写文件、看网页……就这 9 件最基础的「手」，组合出一切能力。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🔁</div>
+            <h4 class="pattern-title">约 100 行的循环</h4>
+            <p class="pattern-desc">整个「思考→行动→再思考」的引擎，只有一百行左右。下一章我们逐行读它。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">🧬</div>
+            <h4 class="pattern-title">越用越强</h4>
+            <p class="pattern-desc">每解决一个新任务，它把过程「结晶」成一个技能存进记忆，下次直接复用。</p>
+          </div>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">设计哲学：不预装技能，而是让它进化</strong>
+            <p>这正是这门课的主线。代码这么少，秘密全在「怎么组织」，而不是「写了多少」。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">从一句话到一连串动作，中间发生了什么</h2>
+        <p>表面上你只说了一句话。底层其实是一个不停打转的循环：大脑想一步、手做一步、把结果再喂回大脑。</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"你输入「帮我点一杯奶茶」，这句话被塞进对话，交给大脑。"},
+          {"highlight":"flow-actor-2","label":"大脑（LLM）读完，决定：先打开外卖网站。","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-3","label":"引擎挑出大脑点名的工具，真的去执行它。","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"工具动手：浏览器打开、页面加载、内容被读回来。"},
+          {"highlight":"flow-actor-2","label":"执行结果被打包，重新喂回大脑，让它想下一步。","packet":true,"from":"actor-3","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"循环重复：选门店 → 加购物车 → 结算……直到任务完成。"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">🧑</div>
+              <span>你 / 任务</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🧠</div>
+              <span>大脑 (LLM)</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">🦾</div>
+              <span>工具 / 手</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">点「下一步」，看一句话如何变成一串动作 →</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">下一步</button>
+            <button class="btn flow-reset-btn">重来</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔑</div>
+          <div class="callout-content">
+            <strong class="callout-title">关键直觉</strong>
+            <p>智能体不是「一次性想好全部步骤」，而是<strong>走一步看一步</strong>。这个不停打转的循环，就是整个框架的心脏——也是下一章的主角。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">这趟旅程从哪一行代码开始</h2>
+        <p>所有这些，都从一个叫 <code>agent_runner_loop</code> 的函数起步。它做的第一件事，就是把「系统说明书」和「你的话」摆上桌。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-keyword">def</span> <span class="code-function">agent_runner_loop</span>(client, system_prompt, user_input, handler, tools_schema,</span>
+<span class="code-line">                      max_turns=<span class="code-number">40</span>, verbose=<span class="code-keyword">True</span>, ...):</span>
+<span class="code-line">    messages = [</span>
+<span class="code-line">        {<span class="code-string">"role"</span>: <span class="code-string">"system"</span>, <span class="code-string">"content"</span>: system_prompt},</span>
+<span class="code-line">        {<span class="code-string">"role"</span>: <span class="code-string">"user"</span>, <span class="code-string">"content"</span>: ... user_input}</span>
+<span class="code-line">    ]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">定义那个核心循环函数。它收到几样东西：一个能和大脑对话的 <span class="term" data-definition="client（客户端）这里指「负责跟大模型 API 通话的那段程序」。你把对话发给它，它返回大模型的回复。">通话客户端</span>、一份系统说明书、你的那句话、一个会真正动手的 <span class="term" data-definition="handler（处理器）是「真正执行每个工具」的那个对象。大脑说要跑代码，就由它去跑。">执行器</span>，和一份工具清单。</p>
+              <p class="tl"><code>max_turns=40</code> 是一道保险：最多自己转 40 圈就停，免得无限打转。</p>
+              <p class="tl">开一个对话列表 <code>messages</code>，这就是要发给大脑的内容。</p>
+              <p class="tl">第一条是 <span class="term" data-definition="System prompt（系统提示词）是给 AI 的「岗位说明书」，写明它是谁、能用哪些工具、要遵守什么规矩。每次对话都先读它。">系统说明书</span>，告诉大脑「你是谁、能用什么工具、规矩是什么」。</p>
+              <p class="tl">第二条才是你说的那句话。</p>
+              <p class="tl">说明书 + 你的话，凑成大脑的第一份「输入」。旅程正式开始。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：检验直觉</h2>
+        <p>不考记忆，只考你是否抓住了这一章的思路。</p>
+
+        <div class="quiz-container" id="quiz-module1">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对了。智能体的本质就是「走一步、看结果、再决定下一步」的循环。它不预先规划全部，而是根据每一步的真实反馈动态调整——这也是它能应对意外（比如弹出验证码）的原因。"
+               data-explanation-wrong="再想想。如果它一次性想好全部步骤再闷头执行，遇到页面变了、弹窗了就会全盘崩掉。回看上面那个打转的动画——它其实是「想一步、做一步、再想一步」。">
+            <h3 class="quiz-question">下面哪种说法，最贴近 GenericAgent 完成任务的方式？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>大脑一次性把全部步骤都想好，然后程序照单全收、一口气执行完。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>大脑每次只决定下一步，执行后把结果喂回去，再决定再下一步，循环往复。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>它把任务发给一个云端服务器，由服务器全权代办，本地只负责显示结果。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。代码量小，意味着秘密不在「写了多少功能」，而在「怎么把极少的零件组织成强大的能力」——循环怎么转、记忆怎么分层、工具怎么复用。这门课接下来拆的就是这些。"
+               data-explanation-wrong="不太对。「约 3000 行」恰恰是卖点而非短板。它靠的是巧妙的结构（循环 + 分层记忆 + 自我进化），而不是堆功能。代码少，反而说明设计精巧。">
+            <h3 class="quiz-question">假设你要向朋友解释「为什么 3000 行代码能这么强」，下面哪个角度最对？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它偷偷调用了一个超大的闭源系统，本地代码只是个壳。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为 3000 行已经很多了，足够把所有功能都写死进去。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为强大来自「结构」而非「行数」——少量零件被巧妙组织成可进化的系统。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">下一章</strong>
+            <p>我们钻进那颗「心脏」——约 100 行的 <code>agent_runner_loop</code>，看它一圈一圈到底在做什么。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-2" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">100 行的心跳</h1>
+      <p class="module-subtitle">把整个智能体引擎想成一局「回合制游戏」——每一回合，AI 只做一件事。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">一个好用的比喻：回合制游戏</h2>
+        <p>象棋、回合制 RPG，都是「轮到你 → 你走一步 → 看棋盘变化 → 再轮到你」。GenericAgent 的引擎一模一样。</p>
+        <div class="icon-rows">
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-2)">🧠</div>
+            <div>
+              <strong>轮到 AI 行动</strong>
+              <p>把当前对话发给大脑，让它想：「这一步我要调用哪个工具？」</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-1)">🦾</div>
+            <div>
+              <strong>执行这一步</strong>
+              <p>引擎把大脑点名的工具真正跑一遍，拿到结果。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-4)">🔄</div>
+            <div>
+              <strong>把棋盘变化告诉它</strong>
+              <p>结果被打包成下一回合的输入，再丢回大脑。回合数 +1。</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">⏱️</div>
+          <div class="callout-content">
+            <strong class="callout-title">一个「回合」= 一次工具调用</strong>
+            <p>工程师把这一圈叫做一个 <span class="term" data-definition="Turn（回合）指智能体「想一次 + 做一次」的完整一圈。一个复杂任务可能要几十个回合才能完成。">turn（回合）</span>。下面的代码里，<code>turn</code> 这个计数器就是游戏的回合数。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">心跳的第一拍：开口问大脑</h2>
+        <p>每个回合的开头，引擎做的第一件事，是把整份对话发给大脑、等它回话。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-keyword">while</span> turn &lt; handler.max_turns:</span>
+<span class="code-line">    turn += <span class="code-number">1</span></span>
+<span class="code-line">    response_gen = client.chat(messages=messages, tools=tools_schema)</span>
+<span class="code-line">    response = <span class="code-keyword">yield from</span> response_gen</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl"><span class="term" data-definition="while 循环：一段「只要条件成立就一直重复」的代码。这里是「只要回合数没超上限，就一直转」。">只要</span>回合数还没到上限，就继续转这个圈。</p>
+              <p class="tl">回合数加 1——新的一回合开始了。</p>
+              <p class="tl">把整份对话 + 可用工具清单，发给大脑，请它思考并回话。</p>
+              <p class="tl">等大脑把话说完，收下它的完整回复 <code>response</code>。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">📡</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么把工具清单一起发？</strong>
+            <p>大脑不会凭空知道自己有哪些「手」。每回合都把 <code>tools_schema</code>（工具说明书）一起递过去，它才知道这回合能选哪些工具来用。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">第二拍：大脑点名，引擎动手</h2>
+        <p>大脑的回话里，藏着它这一步想调用的工具。引擎要把这些「点名」一个个解析出来，然后真正去执行。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line">tool_calls = [{<span class="code-string">'tool_name'</span>: tc.function.name,</span>
+<span class="code-line">               <span class="code-string">'args'</span>: json.loads(tc.function.arguments),</span>
+<span class="code-line">               <span class="code-string">'id'</span>: tc.id}</span>
+<span class="code-line">              <span class="code-keyword">for</span> tc <span class="code-keyword">in</span> response.tool_calls]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">从大脑的回复里，把每一个「工具调用」拆出来。</p>
+              <p class="tl">记下工具的名字（比如 <code>code_run</code>）。</p>
+              <p class="tl">记下要传给它的参数。<span class="term" data-definition="JSON 是一种「带括号和引号的结构化文本」，是程序之间传数据的通用格式。json.loads 就是把这段文本变回程序能用的数据。">JSON</span> 文本在这里被翻译回程序能用的形式。</p>
+              <p class="tl">还有一个 <code>id</code>，方便稍后把「结果」对回到「是哪次调用」。</p>
+              <p class="tl">大脑这回合可能一次点好几个工具，所以用列表把它们都收齐。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">把一个回合，听成一段对话</h2>
+        <p>如果给引擎、大脑、工具三个角色配上对话框，一个回合大概是这样聊的：</p>
+
+        <div class="chat-window" id="chat-module2">
+          <div class="chat-messages">
+            <div class="chat-message" data-msg="0" data-sender="engine" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">⚙️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">引擎 (Loop)</span>
+                <p>第 7 回合。这是目前的对话和你能用的工具，想想下一步该干嘛？</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="1" data-sender="brain" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-2)">🧠</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-2)">大脑 (LLM)</span>
+                <p>我决定调用 <code>code_run</code>，跑这段 Python 把价格抓下来。</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="2" data-sender="engine" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">⚙️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">引擎 (Loop)</span>
+                <p>收到，我去找名叫 <code>do_code_run</code> 的执行器，把它跑了。</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="3" data-sender="tool" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">🦾</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-1)">工具 (code_run)</span>
+                <p>跑完了，结果：<code>{"price": 18}</code>。给你一个 StepOutcome。</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="4" data-sender="engine" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">⚙️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">引擎 (Loop)</span>
+                <p>它没说「该退出」，那就把结果打包成下一回合的输入。第 8 回合，开始！</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-typing" id="chat-typing" style="display:none">
+            <div class="chat-avatar" id="typing-avatar">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+          <div class="chat-controls">
+            <button class="btn chat-next-btn">下一条</button>
+            <button class="btn chat-all-btn">全部播放</button>
+            <button class="btn chat-reset-btn">重播</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">第三拍：这回合的「裁决」</h2>
+        <p>每个工具跑完，都会交回一张小纸条，叫 <code>StepOutcome</code>。引擎只看上面三栏，就知道这局怎么继续。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-decorator">@dataclass</span></span>
+<span class="code-line"><span class="code-keyword">class</span> <span class="code-function">StepOutcome</span>:</span>
+<span class="code-line">    data: Any</span>
+<span class="code-line">    next_prompt: Optional[str] = <span class="code-keyword">None</span></span>
+<span class="code-line">    should_exit: bool = <span class="code-keyword">False</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">定义一张标准化的「结果纸条」。每个工具跑完都填一张。</p>
+              <p class="tl"><code>data</code>：这一步实际拿到的东西（比如抓到的价格）。</p>
+              <p class="tl"><code>next_prompt</code>：下一回合要对大脑说的话。<strong>如果留空，引擎就认为「任务做完了」，停。</strong></p>
+              <p class="tl"><code>should_exit</code>：一个 <span class="term" data-definition="布尔值（bool）是只有「真 / 假」两种取值的开关。这里 True 就代表「该退出了」。">真假开关</span>。比如工具要找用户确认，就把它设成「真」，主动跳出循环等人。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧭</div>
+          <div class="callout-content">
+            <strong class="callout-title">三栏纸条，就是整局游戏的方向盘</strong>
+            <p>「有没有下一句话」决定继续还是收工；「要不要退出」决定是否暂停等人。一个极简的约定，控制了整个循环的走向——这就是少代码却不乱的诀窍。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">心跳的最后一拍：只带「新消息」进下一回合</h2>
+        <p>每回合结束，引擎都会做一件乍看很怪的事——把对话列表清空，只留下这一条新消息。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-comment"># just new message, history is kept in *Session</span></span>
+<span class="code-line">messages = [{<span class="code-string">"role"</span>: <span class="code-string">"user"</span>,</span>
+<span class="code-line">             <span class="code-string">"content"</span>: next_prompt,</span>
+<span class="code-line">             <span class="code-string">"tool_results"</span>: tool_results}]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">代码作者亲手写的注释：「只放新消息，历史另外存着」。</p>
+              <p class="tl">把 <code>messages</code> 整个重置，里头只剩一条新的「用户消息」。</p>
+              <p class="tl">内容是上一步的裁决（<code>next_prompt</code>）……</p>
+              <p class="tl">外加这回合工具跑出来的结果。然后下一回合就从这里继续。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🤔</div>
+          <div class="callout-content">
+            <strong class="callout-title">等等——那之前的对话不就丢了吗？</strong>
+            <p>这正是 GenericAgent 最聪明、也最反直觉的设计，直接关系到它「省 token、少出错」的核心优势。我们专门留到 <strong>第 4 章</strong> 拆它。先记住这个疑问。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：你能指挥这台引擎吗</h2>
+        <p>下面的问题，都是你以后真用 AI 调试时会遇到的判断。</p>
+
+        <div class="quiz-container" id="quiz-module2">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。把 next_prompt 留空（None），引擎就判定「没有下一步要说的了 = 任务完成」，于是跳出循环。这是整个循环最关键的退出信号之一。"
+               data-explanation-wrong="再看一眼那张 StepOutcome 纸条。引擎判断「该停了」靠的不是回合数用完，而是工具明确表示「没有下一句话要说了」（next_prompt 为空）或「要退出」。">
+            <h3 class="quiz-question">一个工具执行完，希望告诉引擎「任务已经彻底完成，可以收工了」。它该怎么填那张 StepOutcome 纸条？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>把回合数 turn 直接改成 40，让循环自然到顶。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>把 next_prompt 留空（None）——「没有下一句要说的」就被引擎读作「任务完成」。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>在 data 里写一句「我完成了」，引擎会读懂这句中文。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。max_turns=40 是「防失控」的保险丝：万一 AI 陷入死循环、反复试错，最多转 40 圈就被强制叫停，避免它无限烧钱、无限折腾。理解这点，你以后就知道任务「莫名其妙停了」可能是撞了回合上限。"
+               data-explanation-wrong="不太对。max_turns 不是为了让任务更快，也不是模型能力上限——它是一道安全保险：防止智能体陷入无限循环时一直空转下去。">
+            <h3 class="quiz-question">循环条件里那句 <code>while turn &lt; max_turns</code>（默认 40），最主要是为了解决什么问题？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>让任务跑得更快——回合越少越快。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>这是模型一次能力的硬上限，超过 40 步它就「想不动」了。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>一道安全保险：万一 AI 陷入死循环，最多空转 40 圈就被强制叫停。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module2')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module2')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">下一章</strong>
+            <p>循环里那只「真正动手」的执行器，到底有哪几只手？我们去认识那 <strong>9 件原子工具</strong>。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-3" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">9 件原子工具</h1>
+      <p class="module-subtitle">就像乐高只有几种基础颗粒，却能拼出整座城堡——GA 只用 9 件最基础的「手」，组合出一切能力。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">「原子」是什么意思</h2>
+        <p>原子，就是<strong>不能再拆小</strong>的最基础零件。GA 的工具刻意保持极少、极基础，复杂能力靠它们<strong>组合</strong>出来，而不是一个个写死。</p>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧱</div>
+          <div class="callout-content">
+            <strong class="callout-title">乐高思维</strong>
+            <p>乐高不会为「城堡」「飞机」各做一种专用零件，而是给你几种通用颗粒，让你自己拼。GA 的 9 件工具就是这几种颗粒——<span class="term" data-definition="原子工具：指最基础、不可再分的能力单元。复杂功能不是新写一个工具，而是把这些基础工具组合起来完成。">原子工具</span>。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">认识这 9 件颗粒</h2>
+        <p>它们分三类：动手干活的、读写文件的、还有两件特殊的「记忆」工具。</p>
+
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">⚡</div>
+            <h4 class="pattern-title">code_run</h4>
+            <p class="pattern-desc">执行任意代码（Python / PowerShell）。最万能的一件，下一屏专门讲它。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">📖</div>
+            <h4 class="pattern-title">file_read</h4>
+            <p class="pattern-desc">读取文件内容，可从指定行开始、可按关键词定位。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">✍️</div>
+            <h4 class="pattern-title">file_write</h4>
+            <p class="pattern-desc">整体写入 / 新建 / 覆盖一个文件，适合大段内容。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🩹</div>
+            <h4 class="pattern-title">file_patch</h4>
+            <p class="pattern-desc">只改文件里的一小段，做精细修改而不动其余部分。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🌐</div>
+            <h4 class="pattern-title">web_scan</h4>
+            <p class="pattern-desc">感知当前网页内容、列出标签页，也能切换标签页。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🕹️</div>
+            <h4 class="pattern-title">web_execute_js</h4>
+            <p class="pattern-desc">在真实浏览器里跑任意 JS，对网页实现「完全控制」。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">🙋</div>
+            <h4 class="pattern-title">ask_user</h4>
+            <p class="pattern-desc">向人求助、确认关键决策。这是「人在回路」的安全阀。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">📝</div>
+            <h4 class="pattern-title">update_working_checkpoint</h4>
+            <p class="pattern-desc">（记忆）短期的「便利贴」，记下当前任务的重点。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">💎</div>
+            <h4 class="pattern-title">start_long_term_update</h4>
+            <p class="pattern-desc">（记忆）把验证成功的经验「结晶」成长期技能。第 5 章主角。</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🎙️</div>
+          <div class="callout-content">
+            <strong class="callout-title">学会这些名字，就是在学「指挥 AI 的词汇」</strong>
+            <p>当你能说出「用 <code>file_patch</code> 改这一段，别整个 <code>file_write</code> 覆盖」，你对 AI 的指令就精确多了——这正是这门课想给你的能力。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">引擎怎么知道该跑哪只「手」？</h2>
+        <p>这里有一个特别优雅的小设计：靠<strong>名字对名字</strong>。大脑说工具叫 <code>code_run</code>，引擎就去找一个叫 <code>do_code_run</code> 的方法。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py · dispatch()</span>
+            <pre><code><span class="code-line">method_name = <span class="code-string">f"do_{tool_name}"</span></span>
+<span class="code-line"><span class="code-keyword">if</span> hasattr(self, method_name):</span>
+<span class="code-line">    ret = <span class="code-keyword">yield from</span> try_call_generator(</span>
+<span class="code-line">              getattr(self, method_name), args, response)</span>
+<span class="code-line">    <span class="code-keyword">return</span> ret</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">把工具名前面拼一个 <code>do_</code>。比如 <code>code_run</code> → <code>do_code_run</code>。</p>
+              <p class="tl"><span class="term" data-definition="hasattr：检查「这个对象身上有没有某个名字的方法」。有就能调用，没有就跳过。">检查一下</span>自己身上有没有这个名字的方法。</p>
+              <p class="tl">有的话，就去把它跑起来……</p>
+              <p class="tl">按名字精确地找到那只「手」（<code>getattr</code> = 按名字取出方法），把参数递给它。</p>
+              <p class="tl">跑完，把结果交回去。整个分发只用了几行。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🪄</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么这很妙</strong>
+            <p>加一件新工具，<strong>不用改循环</strong>——只要写一个 <code>do_新名字</code> 的方法，引擎靠命名约定就能自动找到它。这就是「少代码也能扩展」的秘诀之一。工程师管这叫<span class="term" data-definition="约定优于配置：与其写一堆配置去登记每个工具，不如约定好命名规则，程序按规则自动发现。少写代码、少出错。">约定优于配置</span>。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">9 件里最特别的一件：code_run</h2>
+        <p>如果只能留一件工具，那一定是它。因为「能跑任意代码」≈「能做任意事」。</p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-num">＋</div>
+            <div class="step-body">
+              <strong>缺个能力？现装。</strong>
+              <p>没有处理 Excel 的库？<code>code_run</code> 里一句安装命令就装上了。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">＋</div>
+            <div class="step-body">
+              <strong>缺个工具？现写。</strong>
+              <p>需要一个抓股票的脚本？让它当场写出来、跑起来、再调试。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">＋</div>
+            <div class="step-body">
+              <strong>要控制硬件 / 调外部接口？也行。</strong>
+              <p>通过代码，它能驱动鼠标键盘、调摄像头、连任意 <span class="term" data-definition="API：两个程序之间约定好的「对话接口」。通过它，你的程序能让别的服务（地图、天气、支付）替你干活。">API</span>。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🌱</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是「能力扩展」</strong>
+            <p>9 件工具看似很少，但因为有 <code>code_run</code>，GA 能在运行中临时长出任何新本事——再把好用的那次「结晶」成永久技能。少，但不封顶。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">引擎在工具外面，悄悄加了两道规矩</h2>
+        <p>光有工具还不够。引擎在「调用工具」这件事外围，加了两道隐形护栏——这也解释了你平时观察到的一些 AI 行为。</p>
+
+        <h3 style="font-family: var(--font-display); margin-top: var(--space-8)">规矩一：光「贴代码」不执行？引擎会拦下来追问</h3>
+        <p>有时模型会在回复里写一大段代码，却<strong>忘了真正调用工具去跑它</strong>。引擎能识破这一点：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · do_no_tool()</span>
+            <pre><code><span class="code-line">blocks = re.findall(code_block_pattern, content)</span>
+<span class="code-line"><span class="code-keyword">if</span> len(blocks) == <span class="code-number">1</span>:</span>
+<span class="code-line">    m = re.search(code_block_pattern, content)</span>
+<span class="code-line">    after_block = content[m.end():]</span>
+<span class="code-line">    <span class="code-keyword">if</span> <span class="code-keyword">not</span> after_block.strip():</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">数一数这条回复里有几个代码块。</p>
+              <p class="tl">如果<strong>恰好只有一个</strong>大代码块……</p>
+              <p class="tl">找到它的位置……</p>
+              <p class="tl">看看代码块后面还有没有别的内容……</p>
+              <p class="tl">如果后面空空如也——典型的「写完代码就停了、忘了调工具」。引擎于是反问：「这段代码你是要<strong>执行</strong>，还是只想<strong>展示</strong>给我看？」</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🛑</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是你有时看到 AI「突然反问」的原因</strong>
+            <p>不是它犯傻，而是引擎在防「<span class="term" data-definition="光说不练：模型在回复里描述/罗列了要做的代码，却没有真正发起工具调用去执行。引擎检测到这种情况会主动追问，避免任务空转。">光说不练</span>」——避免模型滔滔不绝写了一堆代码，结果一行都没真正跑。理解这点，你就知道该回它一句「执行它」，而不是莫名其妙。</p>
+          </div>
+        </div>
+
+        <h3 style="font-family: var(--font-display); margin-top: var(--space-10)">规矩二：一轮调好几个工具？输出预算自动均分</h3>
+        <p>模型一个回合里可以一次点好几个工具。但如果每个工具都返回一大坨内容，上下文瞬间就爆了。引擎的对策很简单：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · do_code_run()</span>
+            <pre><code><span class="code-line">maxlen = <span class="code-number">10000</span> // args.get(<span class="code-string">'_tool_num'</span>, <span class="code-number">1</span>)</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">这一轮总共调了几个工具（<code>_tool_num</code>），就把输出额度（10000）<strong>除以几</strong>。</p>
+              <p class="tl">调 1 个工具，它独享全部额度；一次调 5 个，每个就只分到五分之一。<strong>总量恒定，绝不超支。</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">⚖️</div>
+          <div class="callout-content">
+            <strong class="callout-title">还有个配套小动作</strong>
+            <p>一轮里的多个工具，只有<strong>第一个</strong>会附带完整的「工作记忆」白板，后面几个直接跳过（<code>skip</code>），免得同样一段记忆被重复塞进去好几遍。又是一处「省 token」的精打细算——和第 4 章的主题一脉相承。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：你会派哪只手？</h2>
+        <p>真实任务里，「选对工具」就是「给 AI 下对指令」。试试看。</p>
+
+        <div class="quiz-container" id="quiz-module3">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。一份大文件里只改一两行，用 file_patch（精细补丁）最稳——它只动目标那一小段，不碰其余内容，避免「整文件覆盖」时手滑把别处写坏。这正是 file_write 和 file_patch 的分工。"
+               data-explanation-wrong="想想 file_write 和 file_patch 的分工。file_write 是「整个文件重写一遍」，改一行就用它，风险是容易把其它内容一起覆盖丢。只改一小段，file_patch 更安全。">
+            <h3 class="quiz-question">一个 2000 行的配置文件，你只想把其中一行的端口号从 8080 改成 9090。让 AI 用哪件工具最稳妥？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>file_write</code> —— 把整个文件重新写一遍。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>file_patch</code> —— 只替换那一小段，其余原封不动。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>code_run</code> —— 写段程序逐字符查找替换。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。要装一个新的 Python 库、当场跑一段没人写过的脚本，靠的就是「能执行任意代码」的 code_run。它是 GA 临时长出新能力的入口——这也是 9 件工具看似少、实则不封顶的原因。"
+               data-explanation-wrong="再想想哪件工具能『执行任意代码』。读网页是 web_scan、问人是 ask_user，但『装一个库 + 跑一段全新脚本』需要真正运行代码的能力。">
+            <h3 class="quiz-question">你让 GA「分析一个 Excel 表」，但它当前环境里没有处理 Excel 的库。它要先装库、再跑一段新写的脚本——这一步靠哪件工具？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>web_scan</code> —— 去网上搜怎么处理 Excel。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>ask_user</code> —— 直接问用户表里有什么。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>code_run</code> —— 执行安装命令并跑分析脚本。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-a"
+               data-explanation-right="对。引擎靠『do_ + 工具名』的命名约定自动找方法，所以加新工具只要写一个 do_send_email 方法即可，循环本身一个字都不用动。这就是『约定优于配置』省下的功夫。"
+               data-explanation-wrong="回看那段 dispatch 代码：method_name = f'do_{tool_name}'。引擎是按『do_ + 名字』自动去找方法的，所以你只需新增一个对应命名的方法，根本不用改循环。">
+            <h3 class="quiz-question">你想给 GA 加一件全新工具 <code>send_email</code>。根据它的分发机制，最少要做什么？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>写一个名叫 <code>do_send_email</code> 的方法，循环代码不用改。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>改写整个 <code>agent_runner_loop</code>，手动加一个 if 分支。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>没法加——9 件工具是写死的，多一件都不行。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。这正是引擎的『光说不练』护栏：模型写了一大段代码却没真正调用工具去跑，引擎检测到后主动确认意图，避免任务空转。你只要回一句『执行它』，它就会重新组织成真正的工具调用。理解机制，就不会被这种反问搞懵。"
+               data-explanation-wrong="回看『规矩一』那屏。模型写了代码却没调工具时，引擎会主动反问『要执行还是只是展示』——这不是 bug、也不是要你手动去跑，而是一道防『光说不练』的护栏。回它『执行』即可。">
+            <h3 class="quiz-question">你让 GA 做个分析，它回复里写了一大段 Python 代码，然后停下来反问你：「这段代码是要执行，还是只想展示？」最准确的理解 + 应对是？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>它卡死或出 bug 了，赶紧重启整个任务。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>引擎的「光说不练」护栏在确认意图——它没真调工具。回一句「执行它」即可。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>它在等我把这段代码复制到别的地方手动运行。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">下一章</strong>
+            <p>还记得第 2 章那个悬念吗——「对话每回合都被清空，历史怎么不丢？」答案在 GA 最聪明的设计：<strong>分层记忆</strong>。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-4" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">分层记忆：每回合擦掉白板，却从不失忆</h1>
+      <p class="module-subtitle">解开第 2 章的悬念，看懂 GA「省 token、少幻觉」最核心的设计。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">先回到那个悬念</h2>
+        <p>第 2 章结尾我们看到这句反直觉的代码——每回合，对话被整个清空，只留一条新消息：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-comment"># just new message, history is kept in *Session</span></span>
+<span class="code-line">messages = [{<span class="code-string">"role"</span>: <span class="code-string">"user"</span>,</span>
+<span class="code-line">             <span class="code-string">"content"</span>: next_prompt, ...}]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">作者的注释已经剧透了答案：「历史另外存着」。</p>
+              <p class="tl">发给大脑的对话每回合都重置——<strong>不是把几十回合的聊天记录越堆越长</strong>。</p>
+              <p class="tl">那历史去哪了？它被压缩成一段精简摘要，重新贴进 <code>next_prompt</code> 里。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧽</div>
+          <div class="callout-content">
+            <strong class="callout-title">好比一块侦探白板</strong>
+            <p>侦探破案不会把每天说过的每句话都钉在墙上——他擦掉白板，只留下当前最关键的线索摘要。GA 对大脑的「工作记忆」就是这么管的：<span class="term" data-definition="工作记忆（Working Memory）：智能体每回合实际带给大脑的那段精简上下文。不是完整聊天记录，而是被折叠压缩过的摘要。">每回合重写白板</span>，而不是无限堆叠。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">白板是怎么「重写」的</h2>
+        <p>每回合结束，引擎会把这一步发生了什么，压成一句话摘要，追加进一条历史清单：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · turn_end_callback()</span>
+            <pre><code><span class="code-line">rsumm = re.search(<span class="code-string">r"&lt;summary&gt;(.*?)&lt;/summary&gt;"</span>, _c, re.DOTALL)</span>
+<span class="code-line"><span class="code-keyword">if</span> rsumm: summary = rsumm.group(<span class="code-number">1</span>).strip()</span>
+<span class="code-line">...</span>
+<span class="code-line">self.history_info.append(<span class="code-string">f'[Agent] {summary}'</span>)</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">在大脑的回复里，找它自己写的一段 <code>&lt;summary&gt;</code>（这一步我干了啥）。</p>
+              <p class="tl">找到了，就把这句摘要提取出来。</p>
+              <p class="tl">（找不到就用工具名兜底，并提醒大脑下次记得写摘要。）</p>
+              <p class="tl">把这句简短摘要追加到历史清单里。<strong>存的是「摘要」，不是整段原文。</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <p>下一回合开头，这份历史清单又会被「折叠」一次——太久远的部分压得更狠，只留最近 30 条原样：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · _get_anchor_prompt()</span>
+            <pre><code><span class="code-line">h = self.history_info; W = <span class="code-number">30</span></span>
+<span class="code-line">earlier = ... self._fold_earlier(h[:-W]) ...  <span class="code-comment"># 远的折叠</span></span>
+<span class="code-line">h_str = <span class="code-string">"\n"</span>.join(h[-W:])         <span class="code-comment"># 近 30 条原样</span></span>
+<span class="code-line">prompt = <span class="code-string">f"### [WORKING MEMORY]\n...&lt;history&gt;\n{h_str}\n&lt;/history&gt;"</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">取出全部历史，定一个窗口大小 <code>W = 30</code>。</p>
+              <p class="tl">把 30 条以外的「远古历史」进一步折叠成更短的概要。</p>
+              <p class="tl">最近 30 条保持原样——近的清楚，远的模糊，正合人脑直觉。</p>
+              <p class="tl">拼成一段 <code>[WORKING MEMORY]</code>，这才是真正贴上白板、交给大脑的内容。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">深入：这份「简化」，是又调了一次 LLM 吗？</h2>
+        <p>很自然会以为：把长历史压成短摘要，肯定要再喊一次大脑去「总结」。<strong>其实不是。</strong>GA 刻意避开了这条路。</p>
+
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-error)">
+            <div class="pattern-icon" style="background: var(--color-error)">🗣️</div>
+            <h4 class="pattern-title">常见误解</h4>
+            <p class="pattern-desc">每次压缩历史，都再花一次 API 调用，让模型「读一遍旧记录、写个总结」。又慢又贵，还可能在总结时把信息搞丢、搞错。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-success)">
+            <div class="pattern-icon" style="background: var(--color-success)">✅</div>
+            <h4 class="pattern-title">GA 的真相</h4>
+            <p class="pattern-desc">那句摘要是模型在「本来就要回复的那一轮」里<strong>顺手写</strong>的；引擎只用一行正则把它抠出来。零额外调用。</p>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · turn_end_callback()</span>
+            <pre><code><span class="code-line">rsumm = re.search(<span class="code-string">r"&lt;summary&gt;(.*?)&lt;/summary&gt;"</span>, _c, re.DOTALL)</span>
+<span class="code-line"><span class="code-keyword">if</span> rsumm: summary = rsumm.group(<span class="code-number">1</span>).strip()</span>
+<span class="code-line"><span class="code-keyword">else</span>:</span>
+<span class="code-line">    ... summary = <span class="code-string">f"{tool_name}, args: {clean_args}"</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">在模型这一轮的回复里，用<span class="term" data-definition="正则表达式（Regex）：一种「按模式在文本里查找/匹配」的规则。这里就是『把 <summary> 和 </summary> 之间的内容捞出来』，纯靠程序，不需要 AI。">正则</span>找它自己写的 <code>&lt;summary&gt;</code> 标签。</p>
+              <p class="tl">找到了，就把这段摘要抠出来——<strong>这就完事了，没有第二次 API 调用。</strong></p>
+              <p class="tl">万一模型偷懒没写……</p>
+              <p class="tl">就直接拿「工具名 + 参数」当摘要兜底，连模型都不麻烦。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧮</div>
+          <div class="callout-content">
+            <strong class="callout-title">那「更狠的折叠」呢？也是纯代码</strong>
+            <p>把更早的历史压成 <code>xxx（10 turns）</code> 这种一行概要，靠的是<strong>数数 + 字符串切片</strong>（<code>_fold_earlier</code>），同样不碰 LLM。<span class="term" data-definition="确定性（Deterministic）：同样的输入，永远得到同样的输出。纯代码操作就是确定性的，不会像 AI 那样每次结果略有不同、偶尔编造。">确定性</span>操作，又快又免费，还不会像 AI 总结那样偶尔「编出」原本没有的东西。</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🎯</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么这个选择很关键</strong>
+            <p>如果「简化记忆」本身还要调 LLM，就和第 4 章的目标（省钱、少幻觉）<strong>自相矛盾</strong>了。GA 用「让模型搭便车自报 + 代码折叠」替代「额外 LLM 总结」，是把省钱和防幻觉贯彻到底的一步。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">看一眼这块白板的「重写循环」</h2>
+        <p>每一回合，历史都被重新折叠一次，再贴回给大脑。点下去看它转一圈：</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"这一回合干完了，引擎拿到完整的历史清单（越攒越多）。"},
+          {"highlight":"flow-actor-2","label":"折叠：30 条以外的远古历史被压成短概要，最近 30 条留原样。","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-3","label":"拼成一小段 [WORKING MEMORY]，这就是要贴上白板的精简摘要。","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"上下文始终保持很小（GA 全程 < 30K），大脑读起来又快又准。"},
+          {"highlight":"flow-actor-1","label":"下一回合再来一遍——白板永远精简，记忆却从不丢失。","packet":true,"from":"actor-3","to":"actor-1"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">📜</div>
+              <span>完整历史</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🗜️</div>
+              <span>折叠压缩</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">🧠</div>
+              <span>精简白板 → 大脑</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">点「下一步」，看记忆如何被一次次折叠 →</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">下一步</button>
+            <button class="btn flow-reset-btn">重来</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">💰</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是「省 token、少幻觉」的来源</strong>
+            <p>别的智能体常把几十万字的聊天记录整团塞给大脑（<span class="term" data-definition="上下文窗口（Context Window）：大模型一次能读进去的文字量上限。塞得越满越贵，而且噪声越多，模型越容易看花眼、答错。">上下文窗口</span> 200K–1M）。GA 全程压在 30K 以内：<strong>更便宜、噪声更少、模型更不容易被带偏。</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">再省一刀：读过的内容，别重复收费</h2>
+        <p>还有个容易被忽略的省钱细节。每回合发给大脑的开头那一大段（系统说明书 + 记忆）几乎不变——如果每次都按全价算钱，太亏了。</p>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🏷️</div>
+          <div class="callout-content">
+            <strong class="callout-title">像复印店的「常用模板」</strong>
+            <p>复印店会把你常印的模板存着，下次只收新增页的钱。大模型也有这功能,叫 <span class="term" data-definition="Prompt 缓存（Prompt Caching）：让模型把『不变的开头部分』存起来，下次同样的开头直接命中缓存，只按很低的价格计费。是省钱的关键手段之一。">Prompt 缓存</span>——但你得主动给「不变的部分」贴个标记，它才会缓存。</p>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · llmcore.py · _stamp_oai_cache_markers()</span>
+            <pre><code><span class="code-line">user_idxs = [i <span class="code-keyword">for</span> i, m <span class="code-keyword">in</span> enumerate(messages)</span>
+<span class="code-line">             <span class="code-keyword">if</span> m.get(<span class="code-string">'role'</span>) == <span class="code-string">'user'</span>]</span>
+<span class="code-line"><span class="code-keyword">for</span> idx <span class="code-keyword">in</span> user_idxs[-<span class="code-number">2</span>:]:</span>
+<span class="code-line">    ... <span class="code-property">'cache_control'</span>: {<span class="code-string">'type'</span>: <span class="code-string">'ephemeral'</span>}</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">找出对话里所有「用户消息」的位置。</p>
+              <p class="tl">（一句紧凑的<span class="term" data-definition="列表推导式（List Comprehension）：Python 里一种『一行写完一个筛选/变换循环』的简洁写法。这里就是『挑出所有 role 是 user 的消息下标』。">列表推导式</span>，把它们的下标都收齐。）</p>
+              <p class="tl">只给<strong>最后两条</strong>打标记——前面不变的开头就能被整段缓存命中。</p>
+              <p class="tl">贴上 <code>cache_control: ephemeral</code> 这个标签，告诉模型：「这段可以缓存，下次别重新收费」。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">💸</div>
+          <div class="callout-content">
+            <strong class="callout-title">小标记，大节省</strong>
+            <p>命中缓存的部分,价格可能只有原价的<strong>十分之一</strong>。配合前面「上下文本就压在 30K 以内」，GA 的每一轮都既短、又大量复用缓存——省钱省到了骨子里。（仅对 Claude / Anthropic 这类支持缓存的模型生效。）</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">白板之外：磁盘上的「档案柜」</h2>
+        <p>白板是<strong>短期</strong>记忆，任务结束就没了。真正长期沉淀的知识，存在磁盘上、分成 5 层。点标签切换看每一层：</p>
+
+        <div class="layer-demo">
+          <div class="layer-tabs">
+            <button class="layer-tab active" onclick="showLayer('layer-l0', this)">L0 元规则</button>
+            <button class="layer-tab" onclick="showLayer('layer-l1', this)">L1 索引</button>
+            <button class="layer-tab" onclick="showLayer('layer-l2', this)">L2 事实</button>
+            <button class="layer-tab" onclick="showLayer('layer-l3', this)">L3 技能</button>
+            <button class="layer-tab" onclick="showLayer('layer-l4', this)">L4 归档</button>
+          </div>
+          <div class="layer-viewport">
+            <div class="layer" id="layer-l0" style="display:block">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-1)">📜</div>
+                <div>
+                  <strong>L0 · 元规则（Meta Rules）</strong>
+                  <p>最高宪法：核心行为准则、系统红线。比如「改自身源码先请示」「写记忆前先读 L0 核验」。永远不变。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l1" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-2)">🗂️</div>
+                <div>
+                  <strong>L1 · 洞察索引（Insight Index）</strong>
+                  <p>一份极简「目录」，用来快速路由：哪类任务该去翻哪份 SOP。每回合都带在身边，所以必须极小。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l2" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-3)">🗃️</div>
+                <div>
+                  <strong>L2 · 全局事实（Global Facts）</strong>
+                  <p>长期稳定的事实档案：常用路径、配置、凭证位置。验证过、长期有效的才进来。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l3" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-4)">📘</div>
+                <div>
+                  <strong>L3 · 任务技能 / SOP</strong>
+                  <p>可复用的「操作手册」：某类任务怎么一步步做、有哪些坑。比如读微信记录、抓股票的完整流程。第 5 章的产物就落在这里。</p>
+                </div>
+              </div>
+            </div>
+            <div class="layer" id="layer-l4" style="display:none">
+              <div class="icon-row">
+                <div class="icon-circle" style="background: var(--color-actor-5)">📦</div>
+                <div>
+                  <strong>L4 · 会话归档（Session Archive）</strong>
+                  <p>已完成任务的历史记录归档，供超长周期回忆——「上个月那次我是怎么搞定的？」</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="layer-description">越往上越「死」（很少改动、人人遵守），越往下越「活」（不断新增、随用随长）。</p>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔗</div>
+          <div class="callout-content">
+            <strong class="callout-title">短期白板 × 长期档案，两套记忆配合</strong>
+            <p>干活时大脑看的是精简白板；遇到没把握的，就顺着 L1 索引去翻 L2 / L3 的档案。这套分工，让一个小上下文也能调动海量沉淀知识。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">记忆什么时候被「写」进去？</h2>
+        <p>关键点：GA <strong>不是想起来才记</strong>。记忆的写入有固定时机，分两种来源——大脑主动写，和引擎按回合节奏「敲桌子」催它写。</p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-num">①</div>
+            <div class="step-body">
+              <strong>任务开始 / 中途 —— 大脑主动写白板</strong>
+              <p>大脑判断「这个重点后面要一直记着」，就调 <code>update_working_checkpoint</code>，把它钉进短期 <span class="term" data-definition="Working Memory（工作记忆）：每回合带给大脑的那段精简上下文。钉进去的 key_info 会一直跟着，直到任务结束。">工作记忆</span> 的 <code>key_info</code>。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">⑦</div>
+            <div class="step-body">
+              <strong>每满 7 回合 —— 引擎催「保存关键上下文」</strong>
+              <p>怕长任务里关键信息被折叠丢掉，引擎主动提醒大脑调 <code>update_working_checkpoint</code>，并建议「别再无效重试，换策略 / 回看 SOP」。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">㉕</div>
+            <div class="step-body">
+              <strong>每满 25 回合 —— 引擎催「写进文件」</strong>
+              <p>提醒大脑把检查点、关键发现、试过的方法<strong>落到磁盘文件</strong>，避免任务太长时白板折叠把它冲掉。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">💎</div>
+            <div class="step-body">
+              <strong>任务完成且有验证经验 —— 结晶进长期记忆</strong>
+              <p>调 <code>start_long_term_update</code>，把验证成功的事实写进 L2、把流程写进 L3。这一步是第 5 章的主角。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">⏰</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么按「回合数」催，而不是凭感觉？</strong>
+            <p>因为大脑干得起劲时容易「只顾往前冲、忘了存档」。引擎用 7、25 这样的固定节拍当闹钟，强制它定期把关键信息落袋——这是长任务不「半路失忆」的保险。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">记忆在哪里被「读」出来用？</h2>
+        <p>写只是一半。记忆真正发挥作用，是在这 4 个被读取的时机——它们决定了大脑每一步「带着多少记忆上场」。</p>
+
+        <div class="icon-rows">
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-1)">🚀</div>
+            <div>
+              <strong>启动时 —— 记忆被拼进「系统说明书」</strong>
+              <p>程序一开机，就把 L0 行为准则 + L1 全局索引塞进系统提示词。大脑第一句话还没说，已经知道「我有哪些记忆可查」。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-4)">🦾</div>
+            <div>
+              <strong>每个工具执行后 —— 重建白板</strong>
+              <p>每跑完一件工具，<code>_get_anchor_prompt</code> 就把折叠后的历史 + <code>key_info</code> + 相关 SOP 重新拼成 <code>[WORKING MEMORY]</code> 贴回去。这是最高频的一次读取。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-2)">🔄</div>
+            <div>
+              <strong>每满 10 回合 —— 重新注入 L1 索引</strong>
+              <p>怕大脑聊久了「忘了自己有哪些记忆」，引擎每 10 轮把全局记忆（L1 索引 + 当前目录）整段重贴一次。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-3)">📖</div>
+            <div>
+              <strong>卡壳 / 拿不准时 —— 主动翻档案</strong>
+              <p>大脑顺着 L1 索引，用 <code>file_read</code> 去翻 L2 的事实、L3 的 SOP。属于「按需查阅」，不是每回合都读。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agentmain.py · get_system_prompt()</span>
+            <pre><code><span class="code-line">prompt += <span class="code-string">f"\nToday: {time.strftime('%Y-%m-%d %a')}\n"</span></span>
+<span class="code-line">prompt += get_global_memory()</span>
+<span class="code-line"><span class="code-keyword">return</span> prompt</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">系统说明书拼好后，先加上今天的日期（让它知道「现在是哪天」）。</p>
+              <p class="tl">再把 <code>get_global_memory()</code>——也就是 L1 全局索引 + 当前目录——整段拼进去。</p>
+              <p class="tl">交回这份「说明书 + 记忆」。<strong>这就是启动时记忆被读取、注入的那一下。</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔗</div>
+          <div class="callout-content">
+            <strong class="callout-title">读和写常常接力发生</strong>
+            <p>注意一个细节：当大脑用 <code>file_read</code> <strong>读</strong>了一份 SOP，引擎会立刻提示它「把这份 SOP 里的关键点提取出来，<strong>写</strong>进 working memory」。一次读取，往往紧跟一次写入——记忆就这样在任务里不断流动。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">把读和写，串成一条任务时间线</h2>
+        <p>假设 GA 在做「盯盘选股」，整个任务 30 个回合。把记忆的读 / 写标在时间轴上，长这样：</p>
+
+        <div class="step-cards">
+          <div class="step-card" style="border-left-color: var(--color-actor-1)">
+            <div class="step-num" style="background: var(--color-actor-1)">T0</div>
+            <div class="step-body">
+              <strong>【读】启动注入</strong>
+              <p>系统提示词带上 L0 + L1。大脑一上来就知道有 <code>scheduled_task_sop</code> 这类技能可查。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-actor-3)">
+            <div class="step-num" style="background: var(--color-actor-3)">T2</div>
+            <div class="step-body">
+              <strong>【读】翻 L3 SOP</strong>
+              <p>大脑 <code>file_read</code> 读选股 SOP → 引擎提示「提取要点」→【写】把关键步骤钉进 working memory。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-actor-5)">
+            <div class="step-num" style="background: var(--color-actor-5)">T7</div>
+            <div class="step-body">
+              <strong>【写】引擎催存档</strong>
+              <p>满 7 回合，引擎提醒 → 大脑调 <code>update_working_checkpoint</code> 保存「已装好 mootdx、筛选条件是 EXPMA 金叉」。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-actor-2)">
+            <div class="step-num" style="background: var(--color-actor-2)">T10</div>
+            <div class="step-body">
+              <strong>【读】重注入 L1</strong>
+              <p>满 10 回合，全局索引整段重贴一次，防止聊久了「忘了记忆库长啥样」。</p>
+            </div>
+          </div>
+          <div class="step-card" style="border-left-color: var(--color-accent)">
+            <div class="step-num">T30</div>
+            <div class="step-body">
+              <strong>【写】结晶进长期记忆</strong>
+              <p>任务成功，调 <code>start_long_term_update</code>：把「选股完整流程」写进 L3，下次一句话复用。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🫀</div>
+          <div class="callout-content">
+            <strong class="callout-title">记忆不是「存了就放着」，而是全程在跳动</strong>
+            <p>启动读一次、每步重建白板、每 10 轮重注入、按需翻档案、关键节点强制存档、完工结晶——读与写交替贯穿整个任务。这套节奏，才是「小上下文也不丢线索」的真正保障。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：拿它来排查问题</h2>
+        <p>理解了记忆设计，你就能解释很多「为什么 AGI 智能体会这样」的现象。</p>
+
+        <div class="quiz-container" id="quiz-module4">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。GA 不把完整聊天记录无限堆给模型，而是每回合把历史折叠成一小段 working memory。上下文始终很小（< 30K），所以更省钱、噪声更少、模型更不容易被一大堆无关历史带偏而产生幻觉。"
+               data-explanation-wrong="再想想第 4 章的核心。GA 省 token 的关键，恰恰是『不把全部历史塞给模型』，而是每回合折叠成精简摘要。把全部历史塞进去是它要避免的事。">
+            <h3 class="quiz-question">有人问你：「为什么 GenericAgent 比别的智能体更省钱、更少胡说八道？」最准确的回答是？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它每回合都把全部聊天历史一字不漏地塞给模型，信息最全。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它每回合把历史折叠成精简摘要，上下文始终很小，噪声少、更便宜。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它用了一个更便宜的小模型，所以又省钱又稳定。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。『某类任务怎么一步步做、有哪些坑』属于可复用的操作手册，正是 L3（任务技能 / SOP）。把它写进 L3，下次遇到同类任务就能直接翻出来照做，不必从零摸索。"
+               data-explanation-wrong="对照一下五层的分工。一份『某类任务的完整操作步骤和坑点』不是临时事实(L2)、也不是最高准则(L0)，而是可复用的操作手册——那是 L3 技能/SOP 的地盘。">
+            <h3 class="quiz-question">GA 第一次成功读取了微信聊天记录，过程中踩了好几个坑。它想把「这类任务该怎么做」永久存下来，应该写进哪一层？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>L0 元规则 —— 因为这很重要。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>白板（working memory）—— 这样下次一定还在。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>L3 任务技能 / SOP —— 可复用的操作手册就该放这里。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。working memory 每回合都会折叠压缩，越早的细节被压得越狠。如果关键约束没被 update_working_checkpoint 钉进 key_info（它会一直跟着、不被折叠冲淡），长任务后期就容易『记不清当初的条件』。应对就是让它把硬约束钉进 working memory，而不是寄望它从一大堆折叠历史里翻出来。"
+               data-explanation-wrong="回看『写入时机』那屏。working memory 是每回合折叠重写的，早期细节会被逐渐压淡。让它『记牢一个长期约束』的正确做法，是用 update_working_checkpoint 钉进 key_info——而不是重启，也不是把全部历史塞回去（那正是 GA 要避免的）。">
+            <h3 class="quiz-question">一个几十回合的长任务，你发现 GA 到后期好像「忘了」最初设定的筛选条件。基于记忆机制，最可能的原因 + 最该让它做什么？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>模型出故障了，关掉任务重启一遍。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>条件没钉进 working memory，被折叠冲淡了——让它用 <code>update_working_checkpoint</code> 把约束钉进 key_info。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>上下文太小了，应该把全部历史原文重新塞回去给它。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">最后一章</strong>
+            <p>L3 那本「操作手册」是从哪来的？没人手写——是 GA 自己把成功经验<strong>结晶</strong>出来的。这就是它最大的魔法：自我进化。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-5" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">自我进化：越用越强的秘密</h1>
+      <p class="module-subtitle">GA 把每次成功的摸索「结晶」成一个技能存进记忆——下次同类任务，一句话就能复用。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">一个你身体里就有的比喻</h2>
+        <p>第一次学骑自行车，你要盯着每个动作、摔好几跤。学会之后呢？跨上去就走，根本不用想——那叫<strong>肌肉记忆</strong>。</p>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🚲</div>
+          <div class="callout-content">
+            <strong class="callout-title">GA 也有「肌肉记忆」</strong>
+            <p>第一次做一件新事，它要装库、写脚本、调试、踩坑；做成之后，它把这套流程<span class="term" data-definition="结晶（Crystallize）：把一次成功任务里『验证有效的关键步骤』提炼、固化成一份可复用的技能笔记，存进长期记忆。下次直接照做。">结晶</span>成一份技能笔记。下次同类任务，直接照做，不再从零摸索。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">第一次 vs 之后每一次</h2>
+        <p>同一句指令，第一次和往后的成本天差地别——这正是「自我进化」最直观的样子。</p>
+
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🐣</div>
+            <h4 class="pattern-title">「读我的微信消息」· 第一次</h4>
+            <p class="pattern-desc">装依赖 → 逆向数据库 → 写读取脚本 → 反复调试 → 把流程存成技能。慢，但只此一次。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">🚀</div>
+            <h4 class="pattern-title">「读我的微信消息」· 之后</h4>
+            <p class="pattern-desc">直接翻出那份技能，一句话调用。秒级完成。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🐣</div>
+            <h4 class="pattern-title">「盯盘并提醒我」· 第一次</h4>
+            <p class="pattern-desc">装 <code>mootdx</code> → 搭选股流程 → 配置定时任务 → 存成技能。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">🚀</div>
+            <h4 class="pattern-title">「盯盘并提醒我」· 之后</h4>
+            <p class="pattern-desc">一句话启动，整套监控自动跑起来。</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🌳</div>
+          <div class="callout-content">
+            <strong class="callout-title">长出一棵专属技能树</strong>
+            <p>用上几周，你这台 GA 会攒出一套<strong>世界上独一无二</strong>的技能——全是从那 3000 行种子代码、配合你的真实任务长出来的。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">「结晶」是哪件工具干的</h2>
+        <p>还记得第 3 章那件特殊的记忆工具 <code>start_long_term_update</code> 吗？任务做完、有值得记的东西时，它就启动「结晶」流程：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · do_start_long_term_update()</span>
+            <pre><code><span class="code-line">prompt = <span class="code-string">'''### [总结提炼经验] ...请提取最近一次任务中</span></span>
+<span class="code-line"><span class="code-string">【事实验证成功且长期有效】的环境事实、用户偏好、</span></span>
+<span class="code-line"><span class="code-string">重要步骤，更新记忆。</span></span>
+<span class="code-line"><span class="code-string">**如果没有经验证的、未来能用上的信息，忽略本次调用！**</span></span>
+<span class="code-line"><span class="code-string">**只能提取行动验证成功的信息** ...'''</span></span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">它给大脑下一道「结算」指令：回顾刚才的任务，挑出值得长期记住的东西。</p>
+              <p class="tl">只挑三类：验证过的<strong>环境事实</strong>、<strong>用户偏好</strong>、<strong>关键步骤</strong>。</p>
+              <p class="tl">划重点：<strong>没有「验证成功、未来用得上」的信息，就直接跳过</strong>，绝不为记而记。</p>
+              <p class="tl">再划重点：只准记<strong>行动验证成功</strong>的东西——做过但没验证的，不算。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-icon">🚫</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么对「记什么」这么严？</strong>
+            <p>因为记忆会污染未来的判断。如果把没验证的猜测、临时变量、通用常识一股脑塞进去，记忆库会越来越脏，反而拖累它。<strong>只结晶被现实验证过的经验</strong>——这是保持「越用越准」而不是「越用越乱」的关键纪律。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">把整个进化闭环串起来</h2>
+        <p>你这门课学的每一块，其实都是这个闭环上的一环：</p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>新任务来了</strong>
+              <p>循环（第 2 章）启动，大脑开始走一步看一步。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>自主摸索</strong>
+              <p>用 9 件工具（第 3 章）装依赖、写脚本、调试、验证，直到做成。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>结晶成技能</strong>
+              <p>把验证成功的关键步骤，写进 L3 记忆层（第 4 章）。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>下次直接复用</strong>
+              <p>遇到同类任务，顺着 L1 索引翻出技能，一句话搞定。能力，就这样滚雪球。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔁</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是它和别的智能体最本质的区别</strong>
+            <p>大多数智能体每次对话都「失忆重来」。GA 会把经验沉淀下来，<strong>一次比一次强</strong>。少量种子代码 + 这个闭环 = 越用越强大的私人智能体。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">毕业测验：把五章连起来</h2>
+        <p>这几题需要你调用整门课的理解，而不只是某一章。</p>
+
+        <div class="quiz-container" id="quiz-module5">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。do_start_long_term_update 的指令里反复强调：只提取『行动验证成功』的信息，没验证的猜测一律不记。这条纪律保证记忆库越来越准而不是越来越脏——这正是『越用越强』而非『越用越乱』的前提。"
+               data-explanation-wrong="回看那段结晶指令。它最强调的一条是『只记验证成功的信息，未验证的一律跳过』。把没验证的猜测也存进去，恰恰是它明令禁止的——那会污染未来判断。">
+            <h3 class="quiz-question">你希望 GA 的记忆「越用越准」。下面哪条做法最符合它的结晶纪律？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>把每次任务的所有推理过程、临时变量都完整存下来，信息越多越好。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>只把「行动验证成功、未来用得上」的事实和步骤存进去，没验证的一律不记。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>每次任务结束都强制写一条新记忆，哪怕没什么新东西。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。你描述的现象——AI 反复试同一个错、绕不出来——往往是它没有调用相关 SOP，或上下文里缺关键约束。基于第 3、4 章，你可以明确指挥它：『先去 L3 翻 xxx_sop』或『把关键约束写进 working memory』。这种精准干预，正是这门课要给你的能力。"
+               data-explanation-wrong="想想你学到的架构。当 AI 陷在 bug 循环里，最有效的不是反复说『再试一次』，而是利用它的记忆机制——让它去翻相关 SOP、或把关键约束钉进 working memory，给它新的信息和方向。">
+            <h3 class="quiz-question">真实场景：你让 GA 干活，它卡在一个 bug 上反复试同样的错招、绕不出来。基于这门课，你最该怎么干预？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>不停回复「再试一次」，直到它撞对为止。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>立刻关掉重开，反正它会自己失忆。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>给它新信息和方向：让它去翻相关 SOP，或把关键约束写进 working memory。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-a"
+               data-explanation-right="对。这正是全课主线：强大来自『结构』——走一步看一步的循环、折叠压缩的记忆、命名约定的工具分发、验证后才结晶的进化闭环。理解了这些结构，你就能看懂、预判、并指挥这类智能体，而不被『代码很少』迷惑。"
+               data-explanation-wrong="再想想这五章的主线。GA 的强大从来不是靠堆功能或藏一个大系统，而是靠几个精巧结构的配合：循环 + 分层记忆 + 工具组合 + 进化闭环。结构，才是答案。">
+            <h3 class="quiz-question">朋友质疑：「3000 行代码的东西能有多强？」用你学到的，最有力的回应是？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>强大来自「结构」而非「行数」：循环、分层记忆、工具组合、进化闭环的精巧配合。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>其实它背后偷偷连着一个几十万行的大系统，本地只是个壳。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>3000 行已经够多了，足以把所有功能都写死进去。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">再试一次</button>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">🎓 你现在能做什么了</h2>
+        <p>从「一句话变一串动作」一路拆到「自我进化的闭环」，你已经握住了这台智能体的全部骨架。</p>
+        <div class="icon-rows">
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-1)">🧭</div>
+            <div>
+              <strong>看懂它在干嘛</strong>
+              <p>任务卡住、莫名停下、行为反常时，你能定位到是循环、工具还是记忆的问题。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-2)">🎯</div>
+            <div>
+              <strong>更精准地指挥它</strong>
+              <p>你能用对词——「用 file_patch 改这段」「去 L3 翻 SOP」「把这条钉进 working memory」。</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-5)">🛠️</div>
+            <div>
+              <strong>判断 AI 对不对</strong>
+              <p>当它声称完成、却没验证，或想把没验证的东西写进记忆时，你知道哪里不对劲。</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🌟</div>
+          <div class="callout-content">
+            <strong class="callout-title">恭喜你读完了</strong>
+            <p>现在打开 <code>agent_loop.py</code> 和 <code>ga.py</code>，你看到的不再是天书，而是一台你理解其每一次心跳的机器。去指挥它吧。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+  </main>
+
+</body>
+</html>

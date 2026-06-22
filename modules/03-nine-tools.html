@@ -1,0 +1,325 @@
+<section class="module" id="module-3" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">9 件原子工具</h1>
+      <p class="module-subtitle">就像乐高只有几种基础颗粒，却能拼出整座城堡——GA 只用 9 件最基础的「手」，组合出一切能力。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">「原子」是什么意思</h2>
+        <p>原子，就是<strong>不能再拆小</strong>的最基础零件。GA 的工具刻意保持极少、极基础，复杂能力靠它们<strong>组合</strong>出来，而不是一个个写死。</p>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🧱</div>
+          <div class="callout-content">
+            <strong class="callout-title">乐高思维</strong>
+            <p>乐高不会为「城堡」「飞机」各做一种专用零件，而是给你几种通用颗粒，让你自己拼。GA 的 9 件工具就是这几种颗粒——<span class="term" data-definition="原子工具：指最基础、不可再分的能力单元。复杂功能不是新写一个工具，而是把这些基础工具组合起来完成。">原子工具</span>。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">认识这 9 件颗粒</h2>
+        <p>它们分三类：动手干活的、读写文件的、还有两件特殊的「记忆」工具。</p>
+
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">⚡</div>
+            <h4 class="pattern-title">code_run</h4>
+            <p class="pattern-desc">执行任意代码（Python / PowerShell）。最万能的一件，下一屏专门讲它。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">📖</div>
+            <h4 class="pattern-title">file_read</h4>
+            <p class="pattern-desc">读取文件内容，可从指定行开始、可按关键词定位。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">✍️</div>
+            <h4 class="pattern-title">file_write</h4>
+            <p class="pattern-desc">整体写入 / 新建 / 覆盖一个文件，适合大段内容。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🩹</div>
+            <h4 class="pattern-title">file_patch</h4>
+            <p class="pattern-desc">只改文件里的一小段，做精细修改而不动其余部分。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🌐</div>
+            <h4 class="pattern-title">web_scan</h4>
+            <p class="pattern-desc">感知当前网页内容、列出标签页，也能切换标签页。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🕹️</div>
+            <h4 class="pattern-title">web_execute_js</h4>
+            <p class="pattern-desc">在真实浏览器里跑任意 JS，对网页实现「完全控制」。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">🙋</div>
+            <h4 class="pattern-title">ask_user</h4>
+            <p class="pattern-desc">向人求助、确认关键决策。这是「人在回路」的安全阀。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">📝</div>
+            <h4 class="pattern-title">update_working_checkpoint</h4>
+            <p class="pattern-desc">（记忆）短期的「便利贴」，记下当前任务的重点。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">💎</div>
+            <h4 class="pattern-title">start_long_term_update</h4>
+            <p class="pattern-desc">（记忆）把验证成功的经验「结晶」成长期技能。第 5 章主角。</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🎙️</div>
+          <div class="callout-content">
+            <strong class="callout-title">学会这些名字，就是在学「指挥 AI 的词汇」</strong>
+            <p>当你能说出「用 <code>file_patch</code> 改这一段，别整个 <code>file_write</code> 覆盖」，你对 AI 的指令就精确多了——这正是这门课想给你的能力。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">引擎怎么知道该跑哪只「手」？</h2>
+        <p>这里有一个特别优雅的小设计：靠<strong>名字对名字</strong>。大脑说工具叫 <code>code_run</code>，引擎就去找一个叫 <code>do_code_run</code> 的方法。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py · dispatch()</span>
+            <pre><code><span class="code-line">method_name = <span class="code-string">f"do_{tool_name}"</span></span>
+<span class="code-line"><span class="code-keyword">if</span> hasattr(self, method_name):</span>
+<span class="code-line">    ret = <span class="code-keyword">yield from</span> try_call_generator(</span>
+<span class="code-line">              getattr(self, method_name), args, response)</span>
+<span class="code-line">    <span class="code-keyword">return</span> ret</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">把工具名前面拼一个 <code>do_</code>。比如 <code>code_run</code> → <code>do_code_run</code>。</p>
+              <p class="tl"><span class="term" data-definition="hasattr：检查「这个对象身上有没有某个名字的方法」。有就能调用，没有就跳过。">检查一下</span>自己身上有没有这个名字的方法。</p>
+              <p class="tl">有的话，就去把它跑起来……</p>
+              <p class="tl">按名字精确地找到那只「手」（<code>getattr</code> = 按名字取出方法），把参数递给它。</p>
+              <p class="tl">跑完，把结果交回去。整个分发只用了几行。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🪄</div>
+          <div class="callout-content">
+            <strong class="callout-title">为什么这很妙</strong>
+            <p>加一件新工具，<strong>不用改循环</strong>——只要写一个 <code>do_新名字</code> 的方法，引擎靠命名约定就能自动找到它。这就是「少代码也能扩展」的秘诀之一。工程师管这叫<span class="term" data-definition="约定优于配置：与其写一堆配置去登记每个工具，不如约定好命名规则，程序按规则自动发现。少写代码、少出错。">约定优于配置</span>。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">9 件里最特别的一件：code_run</h2>
+        <p>如果只能留一件工具，那一定是它。因为「能跑任意代码」≈「能做任意事」。</p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-num">＋</div>
+            <div class="step-body">
+              <strong>缺个能力？现装。</strong>
+              <p>没有处理 Excel 的库？<code>code_run</code> 里一句安装命令就装上了。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">＋</div>
+            <div class="step-body">
+              <strong>缺个工具？现写。</strong>
+              <p>需要一个抓股票的脚本？让它当场写出来、跑起来、再调试。</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">＋</div>
+            <div class="step-body">
+              <strong>要控制硬件 / 调外部接口？也行。</strong>
+              <p>通过代码，它能驱动鼠标键盘、调摄像头、连任意 <span class="term" data-definition="API：两个程序之间约定好的「对话接口」。通过它，你的程序能让别的服务（地图、天气、支付）替你干活。">API</span>。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🌱</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是「能力扩展」</strong>
+            <p>9 件工具看似很少，但因为有 <code>code_run</code>，GA 能在运行中临时长出任何新本事——再把好用的那次「结晶」成永久技能。少，但不封顶。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">引擎在工具外面，悄悄加了两道规矩</h2>
+        <p>光有工具还不够。引擎在「调用工具」这件事外围，加了两道隐形护栏——这也解释了你平时观察到的一些 AI 行为。</p>
+
+        <h3 style="font-family: var(--font-display); margin-top: var(--space-8)">规矩一：光「贴代码」不执行？引擎会拦下来追问</h3>
+        <p>有时模型会在回复里写一大段代码，却<strong>忘了真正调用工具去跑它</strong>。引擎能识破这一点：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · do_no_tool()</span>
+            <pre><code><span class="code-line">blocks = re.findall(code_block_pattern, content)</span>
+<span class="code-line"><span class="code-keyword">if</span> len(blocks) == <span class="code-number">1</span>:</span>
+<span class="code-line">    m = re.search(code_block_pattern, content)</span>
+<span class="code-line">    after_block = content[m.end():]</span>
+<span class="code-line">    <span class="code-keyword">if</span> <span class="code-keyword">not</span> after_block.strip():</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">数一数这条回复里有几个代码块。</p>
+              <p class="tl">如果<strong>恰好只有一个</strong>大代码块……</p>
+              <p class="tl">找到它的位置……</p>
+              <p class="tl">看看代码块后面还有没有别的内容……</p>
+              <p class="tl">如果后面空空如也——典型的「写完代码就停了、忘了调工具」。引擎于是反问：「这段代码你是要<strong>执行</strong>，还是只想<strong>展示</strong>给我看？」</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">🛑</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是你有时看到 AI「突然反问」的原因</strong>
+            <p>不是它犯傻，而是引擎在防「<span class="term" data-definition="光说不练：模型在回复里描述/罗列了要做的代码，却没有真正发起工具调用去执行。引擎检测到这种情况会主动追问，避免任务空转。">光说不练</span>」——避免模型滔滔不绝写了一堆代码，结果一行都没真正跑。理解这点，你就知道该回它一句「执行它」，而不是莫名其妙。</p>
+          </div>
+        </div>
+
+        <h3 style="font-family: var(--font-display); margin-top: var(--space-10)">规矩二：一轮调好几个工具？输出预算自动均分</h3>
+        <p>模型一个回合里可以一次点好几个工具。但如果每个工具都返回一大坨内容，上下文瞬间就爆了。引擎的对策很简单：</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · ga.py · do_code_run()</span>
+            <pre><code><span class="code-line">maxlen = <span class="code-number">10000</span> // args.get(<span class="code-string">'_tool_num'</span>, <span class="code-number">1</span>)</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">这一轮总共调了几个工具（<code>_tool_num</code>），就把输出额度（10000）<strong>除以几</strong>。</p>
+              <p class="tl">调 1 个工具，它独享全部额度；一次调 5 个，每个就只分到五分之一。<strong>总量恒定，绝不超支。</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">⚖️</div>
+          <div class="callout-content">
+            <strong class="callout-title">还有个配套小动作</strong>
+            <p>一轮里的多个工具，只有<strong>第一个</strong>会附带完整的「工作记忆」白板，后面几个直接跳过（<code>skip</code>），免得同样一段记忆被重复塞进去好几遍。又是一处「省 token」的精打细算——和第 4 章的主题一脉相承。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：你会派哪只手？</h2>
+        <p>真实任务里，「选对工具」就是「给 AI 下对指令」。试试看。</p>
+
+        <div class="quiz-container" id="quiz-module3">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。一份大文件里只改一两行，用 file_patch（精细补丁）最稳——它只动目标那一小段，不碰其余内容，避免「整文件覆盖」时手滑把别处写坏。这正是 file_write 和 file_patch 的分工。"
+               data-explanation-wrong="想想 file_write 和 file_patch 的分工。file_write 是「整个文件重写一遍」，改一行就用它，风险是容易把其它内容一起覆盖丢。只改一小段，file_patch 更安全。">
+            <h3 class="quiz-question">一个 2000 行的配置文件，你只想把其中一行的端口号从 8080 改成 9090。让 AI 用哪件工具最稳妥？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>file_write</code> —— 把整个文件重新写一遍。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>file_patch</code> —— 只替换那一小段，其余原封不动。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>code_run</code> —— 写段程序逐字符查找替换。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。要装一个新的 Python 库、当场跑一段没人写过的脚本，靠的就是「能执行任意代码」的 code_run。它是 GA 临时长出新能力的入口——这也是 9 件工具看似少、实则不封顶的原因。"
+               data-explanation-wrong="再想想哪件工具能『执行任意代码』。读网页是 web_scan、问人是 ask_user，但『装一个库 + 跑一段全新脚本』需要真正运行代码的能力。">
+            <h3 class="quiz-question">你让 GA「分析一个 Excel 表」，但它当前环境里没有处理 Excel 的库。它要先装库、再跑一段新写的脚本——这一步靠哪件工具？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>web_scan</code> —— 去网上搜怎么处理 Excel。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>ask_user</code> —— 直接问用户表里有什么。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span><code>code_run</code> —— 执行安装命令并跑分析脚本。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-a"
+               data-explanation-right="对。引擎靠『do_ + 工具名』的命名约定自动找方法，所以加新工具只要写一个 do_send_email 方法即可，循环本身一个字都不用动。这就是『约定优于配置』省下的功夫。"
+               data-explanation-wrong="回看那段 dispatch 代码：method_name = f'do_{tool_name}'。引擎是按『do_ + 名字』自动去找方法的，所以你只需新增一个对应命名的方法，根本不用改循环。">
+            <h3 class="quiz-question">你想给 GA 加一件全新工具 <code>send_email</code>。根据它的分发机制，最少要做什么？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>写一个名叫 <code>do_send_email</code> 的方法，循环代码不用改。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>改写整个 <code>agent_runner_loop</code>，手动加一个 if 分支。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>没法加——9 件工具是写死的，多一件都不行。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对。这正是引擎的『光说不练』护栏：模型写了一大段代码却没真正调用工具去跑，引擎检测到后主动确认意图，避免任务空转。你只要回一句『执行它』，它就会重新组织成真正的工具调用。理解机制，就不会被这种反问搞懵。"
+               data-explanation-wrong="回看『规矩一』那屏。模型写了代码却没调工具时，引擎会主动反问『要执行还是只是展示』——这不是 bug、也不是要你手动去跑，而是一道防『光说不练』的护栏。回它『执行』即可。">
+            <h3 class="quiz-question">你让 GA 做个分析，它回复里写了一大段 Python 代码，然后停下来反问你：「这段代码是要执行，还是只想展示？」最准确的理解 + 应对是？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>它卡死或出 bug 了，赶紧重启整个任务。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>引擎的「光说不练」护栏在确认意图——它没真调工具。回一句「执行它」即可。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>它在等我把这段代码复制到别的地方手动运行。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">下一章</strong>
+            <p>还记得第 2 章那个悬念吗——「对话每回合都被清空，历史怎么不丢？」答案在 GA 最聪明的设计：<strong>分层记忆</strong>。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

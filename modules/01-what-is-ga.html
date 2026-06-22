@@ -1,0 +1,194 @@
+<section class="module" id="module-1" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">你扔一句话，它接管整台电脑</h1>
+      <p class="module-subtitle">认识 GenericAgent：一个只有约 3000 行代码，却能自己开浏览器、敲命令、点手机的智能体。</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">先看一个真实场景</h2>
+        <p>你打开一个聊天框，敲下一句话：<strong>「帮我点一杯奶茶」</strong>，回车。</p>
+        <p>几十秒后，外卖软件被自己操作着选好了门店、加好了购物车、走到了结算页。你全程没碰鼠标。</p>
+        <div class="callout callout-accent">
+          <div class="callout-icon">🤖</div>
+          <div class="callout-content">
+            <strong class="callout-title">这就是「智能体」（Agent）</strong>
+            <p>一个 <span class="term" data-definition="大语言模型，就是 ChatGPT、Claude 这类会「读懂人话、生成文字」的 AI 大脑。它本身只会输出文字，不会动手做事。">LLM 大模型</span> 负责「思考」，外面包一层程序负责「动手」——读屏幕、敲键盘、点网页。两者合起来，就能把一句人话变成一连串真实操作。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">为什么它值得拆开看？</h2>
+        <p>市面上的智能体框架动辄几十万行代码。GenericAgent 反着来：用极少的「种子代码」，让能力自己长出来。</p>
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🪶</div>
+            <h4 class="pattern-title">约 3000 行</h4>
+            <p class="pattern-desc">核心代码极小。对比 OpenClaw 的 ~53 万行，它几乎是一张草稿纸的体量。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🧰</div>
+            <h4 class="pattern-title">9 件原子工具</h4>
+            <p class="pattern-desc">跑代码、读写文件、看网页……就这 9 件最基础的「手」，组合出一切能力。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🔁</div>
+            <h4 class="pattern-title">约 100 行的循环</h4>
+            <p class="pattern-desc">整个「思考→行动→再思考」的引擎，只有一百行左右。下一章我们逐行读它。</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">🧬</div>
+            <h4 class="pattern-title">越用越强</h4>
+            <p class="pattern-desc">每解决一个新任务，它把过程「结晶」成一个技能存进记忆，下次直接复用。</p>
+          </div>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">设计哲学：不预装技能，而是让它进化</strong>
+            <p>这正是这门课的主线。代码这么少，秘密全在「怎么组织」，而不是「写了多少」。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">从一句话到一连串动作，中间发生了什么</h2>
+        <p>表面上你只说了一句话。底层其实是一个不停打转的循环：大脑想一步、手做一步、把结果再喂回大脑。</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"你输入「帮我点一杯奶茶」，这句话被塞进对话，交给大脑。"},
+          {"highlight":"flow-actor-2","label":"大脑（LLM）读完，决定：先打开外卖网站。","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-3","label":"引擎挑出大脑点名的工具，真的去执行它。","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"工具动手：浏览器打开、页面加载、内容被读回来。"},
+          {"highlight":"flow-actor-2","label":"执行结果被打包，重新喂回大脑，让它想下一步。","packet":true,"from":"actor-3","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"循环重复：选门店 → 加购物车 → 结算……直到任务完成。"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">🧑</div>
+              <span>你 / 任务</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🧠</div>
+              <span>大脑 (LLM)</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">🦾</div>
+              <span>工具 / 手</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">点「下一步」，看一句话如何变成一串动作 →</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">下一步</button>
+            <button class="btn flow-reset-btn">重来</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">🔑</div>
+          <div class="callout-content">
+            <strong class="callout-title">关键直觉</strong>
+            <p>智能体不是「一次性想好全部步骤」，而是<strong>走一步看一步</strong>。这个不停打转的循环，就是整个框架的心脏——也是下一章的主角。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">这趟旅程从哪一行代码开始</h2>
+        <p>所有这些，都从一个叫 <code>agent_runner_loop</code> 的函数起步。它做的第一件事，就是把「系统说明书」和「你的话」摆上桌。</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE · agent_loop.py</span>
+            <pre><code><span class="code-line"><span class="code-keyword">def</span> <span class="code-function">agent_runner_loop</span>(client, system_prompt, user_input, handler, tools_schema,</span>
+<span class="code-line">                      max_turns=<span class="code-number">40</span>, verbose=<span class="code-keyword">True</span>, ...):</span>
+<span class="code-line">    messages = [</span>
+<span class="code-line">        {<span class="code-string">"role"</span>: <span class="code-string">"system"</span>, <span class="code-string">"content"</span>: system_prompt},</span>
+<span class="code-line">        {<span class="code-string">"role"</span>: <span class="code-string">"user"</span>, <span class="code-string">"content"</span>: ... user_input}</span>
+<span class="code-line">    ]</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">大白话</span>
+            <div class="translation-lines">
+              <p class="tl">定义那个核心循环函数。它收到几样东西：一个能和大脑对话的 <span class="term" data-definition="client（客户端）这里指「负责跟大模型 API 通话的那段程序」。你把对话发给它，它返回大模型的回复。">通话客户端</span>、一份系统说明书、你的那句话、一个会真正动手的 <span class="term" data-definition="handler（处理器）是「真正执行每个工具」的那个对象。大脑说要跑代码，就由它去跑。">执行器</span>，和一份工具清单。</p>
+              <p class="tl"><code>max_turns=40</code> 是一道保险：最多自己转 40 圈就停，免得无限打转。</p>
+              <p class="tl">开一个对话列表 <code>messages</code>，这就是要发给大脑的内容。</p>
+              <p class="tl">第一条是 <span class="term" data-definition="System prompt（系统提示词）是给 AI 的「岗位说明书」，写明它是谁、能用哪些工具、要遵守什么规矩。每次对话都先读它。">系统说明书</span>，告诉大脑「你是谁、能用什么工具、规矩是什么」。</p>
+              <p class="tl">第二条才是你说的那句话。</p>
+              <p class="tl">说明书 + 你的话，凑成大脑的第一份「输入」。旅程正式开始。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">小测验：检验直觉</h2>
+        <p>不考记忆，只考你是否抓住了这一章的思路。</p>
+
+        <div class="quiz-container" id="quiz-module1">
+          <div class="quiz-question-block"
+               data-correct="opt-b"
+               data-explanation-right="对了。智能体的本质就是「走一步、看结果、再决定下一步」的循环。它不预先规划全部，而是根据每一步的真实反馈动态调整——这也是它能应对意外（比如弹出验证码）的原因。"
+               data-explanation-wrong="再想想。如果它一次性想好全部步骤再闷头执行，遇到页面变了、弹窗了就会全盘崩掉。回看上面那个打转的动画——它其实是「想一步、做一步、再想一步」。">
+            <h3 class="quiz-question">下面哪种说法，最贴近 GenericAgent 完成任务的方式？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>大脑一次性把全部步骤都想好，然后程序照单全收、一口气执行完。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>大脑每次只决定下一步，执行后把结果喂回去，再决定再下一步，循环往复。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>它把任务发给一个云端服务器，由服务器全权代办，本地只负责显示结果。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="opt-c"
+               data-explanation-right="正解。代码量小，意味着秘密不在「写了多少功能」，而在「怎么把极少的零件组织成强大的能力」——循环怎么转、记忆怎么分层、工具怎么复用。这门课接下来拆的就是这些。"
+               data-explanation-wrong="不太对。「约 3000 行」恰恰是卖点而非短板。它靠的是巧妙的结构（循环 + 分层记忆 + 自我进化），而不是堆功能。代码少，反而说明设计精巧。">
+            <h3 class="quiz-question">假设你要向朋友解释「为什么 3000 行代码能这么强」，下面哪个角度最对？</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="opt-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为它偷偷调用了一个超大的闭源系统，本地代码只是个壳。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为 3000 行已经很多了，足够把所有功能都写死进去。</span>
+              </button>
+              <button class="quiz-option" data-value="opt-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>因为强大来自「结构」而非「行数」——少量零件被巧妙组织成可进化的系统。</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">检查答案</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">再试一次</button>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">➡️</div>
+          <div class="callout-content">
+            <strong class="callout-title">下一章</strong>
+            <p>我们钻进那颗「心脏」——约 100 行的 <code>agent_runner_loop</code>，看它一圈一圈到底在做什么。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
