@@ -19,6 +19,37 @@
       --color-accent-light: #FDEEE9;
       --color-accent-muted: #E8836C;
     }
+
+    /* ── 移动端增强：覆盖窄屏下新增元素的拥挤问题 ── */
+    @media (max-width: 600px) {
+      .screen-heading { font-size: var(--text-lg); line-height: var(--leading-snug); }
+      .module { padding-top: calc(var(--nav-height) + var(--space-8)); }
+
+      /* 分层记忆的 5 个标签：换行，不再横向溢出 */
+      .layer-tabs { flex-wrap: wrap; gap: var(--space-2); }
+      .layer-tab { flex: 1 1 auto; font-size: var(--text-xs); padding: var(--space-2) var(--space-3); }
+
+      /* 数据流动画：角色缩小、允许换行 */
+      .flow-actors { gap: var(--space-2); flex-wrap: wrap; }
+      .flow-actor-icon { width: 44px; height: 44px; font-size: 1.05rem; }
+      .flow-actor span { font-size: var(--text-xs); }
+
+      /* 控件按钮换行，不挤成一条 */
+      .flow-controls, .chat-controls { flex-wrap: wrap; gap: var(--space-2); }
+
+      /* 聊天气泡限宽，避免顶满屏 */
+      .chat-bubble { max-width: 78vw; }
+
+      /* 代码对照：字号略缩，左右内边距收紧 */
+      .translation-code, .translation-english { padding: var(--space-4); }
+      .translation-code pre, .translation-code code { font-size: 0.78rem; }
+
+      /* 提示框 / 测验 / 卡片紧凑化 */
+      .callout { padding: var(--space-4); gap: var(--space-3); }
+      .quiz-option { padding: var(--space-3); }
+      .step-card { padding: var(--space-3) var(--space-4); }
+      .icon-row { padding: var(--space-3); }
+    }
   </style>
 
   <script src="main.js" defer></script>
